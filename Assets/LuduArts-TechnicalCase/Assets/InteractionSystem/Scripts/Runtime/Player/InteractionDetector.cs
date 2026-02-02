@@ -1,8 +1,8 @@
 using System;
 using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Enums;
 using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Interfaces;
+using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.UI;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
 {
@@ -27,12 +27,18 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
         [SerializeField] private bool m_UseSpherecast = true;
         [SerializeField] private float m_SpherecastRadius = 0.1f;
 
+        [Header("Input Settings")]
+        [SerializeField] private KeyCode m_InteractionKey = KeyCode.E;
+        [SerializeField] private bool m_UseInputSystem;
+
+        [Header("UI Reference")]
+        [SerializeField] private InteractionUIManager m_UIManager;
+
         [Header("Debug")]
         [SerializeField] private bool m_ShowDebugRay;
         [SerializeField] private Color m_DebugRayColor = Color.green;
 
         // Non-serialized private instance fields
-        private Core.Managers.InputManager m_InputManager;
         private IInteractable m_CurrentTarget;
         private GameObject m_CurrentTargetObject;
         private bool m_IsHolding;
@@ -94,31 +100,14 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
         private void Awake()
         {
             InitializeCamera();
-        }
-
-        private void Start()
-        {
-            m_InputManager = Core.Managers.InputManager.Instance;
-            
-            if (m_InputManager == null)
-            {
-                Debug.LogError("[InteractionDetector] InputManager instance not found!", this);
-                enabled = false;
-                return;
-            }
-
-            SubscribeToInputEvents();
+            ValidateSetup();
         }
 
         private void Update()
         {
             UpdateDetection();
+            HandleInput();
             UpdateHoldProgress();
-        }
-
-        private void OnDestroy()
-        {
-            UnsubscribeFromInputEvents();
         }
 
         private void OnValidate()
@@ -134,8 +123,8 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
                 return;
             }
 
-            var origin = m_RaycastOrigin != null ? m_RaycastOrigin : transform;
-            var direction = origin.forward;
+            Transform origin = m_RaycastOrigin != null ? m_RaycastOrigin : transform;
+            Vector3 direction = origin.forward;
 
             Gizmos.color = m_DebugRayColor;
             Gizmos.DrawRay(origin.position, direction * m_InteractionRange);
@@ -165,68 +154,18 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
             SetTarget(null, null);
         }
 
+        /// <summary>
+        /// Sets the interaction key.
+        /// </summary>
+        /// <param name="key">The new interaction key.</param>
+        public void SetInteractionKey(KeyCode key)
+        {
+            m_InteractionKey = key;
+        }
+
         #endregion
 
         #region Private Methods
-
-        private void SubscribeToInputEvents()
-        {
-            if (m_InputManager == null) return;
-
-            var interactAction = m_InputManager.InputActions.Player.Interact;
-            
-            interactAction.started += OnInteractStarted;
-            interactAction.performed += OnInteractPerformed;
-            interactAction.canceled += OnInteractCanceled;
-        }
-
-        private void UnsubscribeFromInputEvents()
-        {
-            if (m_InputManager == null) return;
-
-            var interactAction = m_InputManager.InputActions.Player.Interact;
-            
-            interactAction.started -= OnInteractStarted;
-            interactAction.performed -= OnInteractPerformed;
-            interactAction.canceled -= OnInteractCanceled;
-        }
-
-        private void OnInteractStarted(InputAction.CallbackContext context)
-        {
-            if (m_CurrentTarget == null || !m_CurrentTarget.CanInteract)
-            {
-                return;
-            }
-
-            switch (m_CurrentTarget.InteractionType)
-            {
-                case InteractionType.Instant:
-                case InteractionType.Toggle:
-                    PerformInteraction();
-                    break;
-
-                case InteractionType.Hold:
-                    if (!m_IsHolding)
-                    {
-                        StartHold();
-                    }
-                    break;
-            }
-        }
-
-        private void OnInteractPerformed(InputAction.CallbackContext context)
-        {
-            // This fires when the button is fully pressed (after started)
-            // Can be used for additional logic if needed
-        }
-
-        private void OnInteractCanceled(InputAction.CallbackContext context)
-        {
-            if (m_IsHolding)
-            {
-                CancelHold();
-            }
-        }
 
         private void InitializeCamera()
         {
@@ -245,6 +184,19 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
             }
         }
 
+        private void ValidateSetup()
+        {
+            if (m_UIManager == null)
+            {
+                m_UIManager = FindAnyObjectByType<InteractionUIManager>();
+                
+                if (m_UIManager == null)
+                {
+                    Debug.LogWarning("[InteractionDetector] No InteractionUIManager found in scene.", this);
+                }
+            }
+        }
+
         private void UpdateDetection()
         {
             if (m_RaycastOrigin == null)
@@ -256,7 +208,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
             GameObject detectedObject = null;
 
             // Perform raycast
-            var ray = new Ray(m_RaycastOrigin.position, m_RaycastOrigin.forward);
+            Ray ray = new Ray(m_RaycastOrigin.position, m_RaycastOrigin.forward);
             RaycastHit hit;
             bool didHit;
 
@@ -311,9 +263,55 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
             {
                 m_CurrentTarget.OnFocusEnter();
             }
-            
+
+            // Update UI
+            UpdateUI();
+
             // Fire event
             OnTargetChanged?.Invoke(m_CurrentTarget);
+        }
+
+        private void HandleInput()
+        {
+            if (m_CurrentTarget == null || !m_CurrentTarget.CanInteract)
+            {
+                if (m_IsHolding)
+                {
+                    CancelHold();
+                }
+                return;
+            }
+
+            bool interactPressed = Input.GetKeyDown(m_InteractionKey);
+            bool interactHeld = Input.GetKey(m_InteractionKey);
+            bool interactReleased = Input.GetKeyUp(m_InteractionKey);
+
+            switch (m_CurrentTarget.InteractionType)
+            {
+                case InteractionType.Instant:
+                case InteractionType.Toggle:
+                    if (interactPressed)
+                    {
+                        PerformInteraction();
+                    }
+                    break;
+
+                case InteractionType.Hold:
+                    HandleHoldInput(interactPressed, interactHeld, interactReleased);
+                    break;
+            }
+        }
+
+        private void HandleHoldInput(bool pressed, bool held, bool released)
+        {
+            if (pressed && !m_IsHolding)
+            {
+                StartHold();
+            }
+            else if (released && m_IsHolding)
+            {
+                CancelHold();
+            }
         }
 
         private void StartHold()
@@ -323,6 +321,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
             m_CurrentHoldProgress = 0f;
 
             m_CurrentTarget.OnHoldStart();
+            UpdateUI();
         }
 
         private void UpdateHoldProgress()
@@ -332,7 +331,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
                 return;
             }
 
-            var holdDuration = m_CurrentTarget.HoldDuration;
+            float holdDuration = m_CurrentTarget.HoldDuration;
             
             if (holdDuration <= 0f)
             {
@@ -340,7 +339,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
                 return;
             }
 
-            var elapsed = Time.time - m_HoldStartTime;
+            float elapsed = Time.time - m_HoldStartTime;
             m_CurrentHoldProgress = Mathf.Clamp01(elapsed / holdDuration);
 
             // Notify target of progress
@@ -349,7 +348,13 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
             // Fire progress event
             OnHoldProgressChanged?.Invoke(m_CurrentHoldProgress);
 
-            // Check if hold is complete
+            // Update UI
+            if (m_UIManager != null)
+            {
+                m_UIManager.UpdateHoldProgress(m_CurrentHoldProgress);
+            }
+
+            // Check for completion
             if (m_CurrentHoldProgress >= 1f)
             {
                 CompleteHold();
@@ -368,6 +373,8 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
 
             m_CurrentTarget.OnHoldComplete();
             OnInteractionPerformed?.Invoke(m_CurrentTarget);
+
+            UpdateUI();
         }
 
         private void CancelHold()
@@ -384,6 +391,8 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
             {
                 m_CurrentTarget.OnHoldCancel();
             }
+
+            UpdateUI();
         }
 
         private void PerformInteraction()
@@ -395,6 +404,46 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
 
             m_CurrentTarget.OnInteract();
             OnInteractionPerformed?.Invoke(m_CurrentTarget);
+
+            // Refresh UI in case prompt changed
+            UpdateUI();
+        }
+
+        private void UpdateUI()
+        {
+            if (m_UIManager == null)
+            {
+                return;
+            }
+
+            if (m_CurrentTarget != null && m_CurrentTarget.CanInteract)
+            {
+                m_UIManager.ShowPrompt(
+                    m_CurrentTarget.InteractionPrompt,
+                    m_InteractionKey.ToString(),
+                    m_CurrentTarget.InteractionType
+                );
+
+                if (m_CurrentTarget.InteractionType == InteractionType.Hold)
+                {
+                    m_UIManager.ShowHoldProgress(m_IsHolding);
+                    m_UIManager.UpdateHoldProgress(m_CurrentHoldProgress);
+                }
+                else
+                {
+                    m_UIManager.HideHoldProgress();
+                }
+            }
+            else if (m_CurrentTarget != null && !m_CurrentTarget.CanInteract)
+            {
+                // Show "cannot interact" feedback
+                m_UIManager.ShowCannotInteract(m_CurrentTarget.InteractionPrompt);
+            }
+            else
+            {
+                m_UIManager.HidePrompt();
+                m_UIManager.HideHoldProgress();
+            }
         }
 
         #endregion

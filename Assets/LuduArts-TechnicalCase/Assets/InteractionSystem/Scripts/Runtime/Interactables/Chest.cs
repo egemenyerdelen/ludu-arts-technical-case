@@ -407,7 +407,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
                 return player.GetComponent<PlayerInventory>();
             }
 
-            return FindObjectOfType<PlayerInventory>();
+            return FindAnyObjectByType<PlayerInventory>();
         }
 
         private void PlaySound(AudioClip clip)

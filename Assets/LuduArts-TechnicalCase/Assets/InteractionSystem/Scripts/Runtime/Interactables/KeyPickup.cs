@@ -271,7 +271,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
             }
 
             // Fallback to FindObjectOfType
-            return FindObjectOfType<PlayerInventory>();
+            return FindAnyObjectByType<PlayerInventory>();
         }
 
         #endregion

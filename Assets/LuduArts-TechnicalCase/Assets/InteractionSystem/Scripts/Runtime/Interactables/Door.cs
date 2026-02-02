@@ -30,7 +30,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         [Header("Lock Settings")]
         [SerializeField] private bool m_IsLocked;
         [SerializeField] private KeyType m_RequiredKeyType = KeyType.None;
-        [SerializeField] private bool m_ConsumeKeyOnUnlock = true;
+        // [SerializeField] private bool m_ConsumeKeyOnUnlock = true;
 
         [Header("Animation")]
         [SerializeField] private Animator m_Animator;
