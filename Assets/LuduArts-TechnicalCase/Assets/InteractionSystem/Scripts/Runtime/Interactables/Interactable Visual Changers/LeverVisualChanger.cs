@@ -1,18 +1,10 @@
-using System;
-using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Enums;
 using UnityEngine;
 
-namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Interactables
+namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Interactables.Interactable_Visual_Changers
 {
-    public class Switch : MonoBehaviour
+    public class LeverVisualChanger : MonoBehaviour
     {
         [SerializeField] private Transform m_LeverTransform;
-        [SerializeField] private ToggleState m_SwitchState = ToggleState.Closed;
-
-        private void UseSwitch()
-        {
-            ChangeSwitchVisual();
-        }
         
         private void ChangeSwitchVisual()
         {
