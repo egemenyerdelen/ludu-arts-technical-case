@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
 {
@@ -17,6 +18,9 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
         private const float k_MinSensitivity = 0.1f;
         private const float k_MaxSensitivity = 100f;
         private const float k_Gravity = -100f;
+        private const float k_GroundedDownForce = -5f;
+        private const float k_DefaultCameraHeight = 0.8f;
+        private const float k_DefaultGroundCheckOffset = -0.9f;
 
         // Serialized private instance fields
         [Header("Movement")]
@@ -83,7 +87,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
         private void Awake()
         {
             m_CharacterController = GetComponent<CharacterController>();
-            
+
             if (m_CharacterController == null)
             {
                 Debug.LogError("[SimplePlayerController] CharacterController component is missing.", this);
@@ -96,7 +100,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
         private void Start()
         {
             m_InputManager = Core.Managers.InputManager.Instance;
-            
+
             if (m_InputManager == null)
             {
                 Debug.LogError("[SimplePlayerController] InputManager instance not found!", this);
@@ -174,28 +178,30 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
 
         private void SubscribeToInputEvents()
         {
-            if (m_InputManager == null) return;
+            if (m_InputManager == null)
+            {
+                Debug.LogError("[SimplePlayerController] Cannot subscribe to input events - InputManager is null.", this);
+                return;
+            }
 
-            // Subscribe to Jump action
             m_InputManager.InputActions.Player.Jump.performed += OnJumpPerformed;
-            
-            // Subscribe to Cancel action (for cursor unlock)
             m_InputManager.InputActions.UI.Cancel.performed += OnCancelPerformed;
-            
-            // Subscribe to Click action (for cursor re-lock)
             m_InputManager.InputActions.UI.Click.performed += OnClickPerformed;
         }
 
         private void UnsubscribeFromInputEvents()
         {
-            if (m_InputManager == null) return;
+            if (m_InputManager == null)
+            {
+                return;
+            }
 
             m_InputManager.InputActions.Player.Jump.performed -= OnJumpPerformed;
             m_InputManager.InputActions.UI.Cancel.performed -= OnCancelPerformed;
             m_InputManager.InputActions.UI.Click.performed -= OnClickPerformed;
         }
 
-        private void OnJumpPerformed(UnityEngine.InputSystem.InputAction.CallbackContext context)
+        private void OnJumpPerformed(InputAction.CallbackContext context)
         {
             if (m_IsGrounded)
             {
@@ -203,12 +209,12 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
             }
         }
 
-        private void OnCancelPerformed(UnityEngine.InputSystem.InputAction.CallbackContext context)
+        private void OnCancelPerformed(InputAction.CallbackContext context)
         {
             ToggleCursorLock();
         }
 
-        private void OnClickPerformed(UnityEngine.InputSystem.InputAction.CallbackContext context)
+        private void OnClickPerformed(InputAction.CallbackContext context)
         {
             if (Cursor.lockState != CursorLockMode.Locked)
             {
@@ -221,25 +227,23 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
             if (m_CameraTransform == null)
             {
                 var mainCamera = Camera.main;
-                
+
                 if (mainCamera != null)
                 {
                     m_CameraTransform = mainCamera.transform;
-                    
+
                     // Parent camera to player if not already
                     if (m_CameraTransform.parent != transform)
                     {
-                        // Create camera holder
                         var cameraHolder = new GameObject("CameraHolder");
                         cameraHolder.transform.SetParent(transform);
-                        cameraHolder.transform.localPosition = new Vector3(0f, 0.8f, 0f);
+                        cameraHolder.transform.localPosition = new Vector3(0f, k_DefaultCameraHeight, 0f);
                         cameraHolder.transform.localRotation = Quaternion.identity;
-                        
+
                         m_CameraTransform.SetParent(cameraHolder.transform);
                         m_CameraTransform.localPosition = Vector3.zero;
                         m_CameraTransform.localRotation = Quaternion.identity;
 
-                        // Use camera holder as the look transform
                         m_CameraTransform = cameraHolder.transform;
                     }
                 }
@@ -254,10 +258,9 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
         {
             if (m_GroundCheck == null)
             {
-                // Create ground check point
                 var groundCheck = new GameObject("GroundCheck");
                 groundCheck.transform.SetParent(transform);
-                groundCheck.transform.localPosition = new Vector3(0f, -0.9f, 0f);
+                groundCheck.transform.localPosition = new Vector3(0f, k_DefaultGroundCheckOffset, 0f);
                 m_GroundCheck = groundCheck.transform;
             }
         }
@@ -268,22 +271,22 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
 
             if (m_IsGrounded && m_Velocity.y < 0f)
             {
-                m_Velocity.y = -5f; // Small downward force to keep grounded
+                m_Velocity.y = k_GroundedDownForce;
             }
         }
 
         private void HandleMovement()
         {
-            if (m_InputManager == null) return;
+            if (m_InputManager == null)
+            {
+                return;
+            }
 
-            // Get movement input from new Input System
             var moveInput = m_InputManager.InputActions.Player.Move.ReadValue<Vector2>();
 
-            // Calculate movement direction
             var moveDirection = transform.right * moveInput.x + transform.forward * moveInput.y;
             moveDirection.Normalize();
 
-            // Apply sprint
             var currentSpeed = m_MoveSpeed;
             var isSprinting = m_InputManager.InputActions.Player.Sprint.IsPressed();
             if (isSprinting)
@@ -291,7 +294,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
                 currentSpeed *= m_SprintMultiplier;
             }
 
-            // Move
             m_CharacterController.Move(moveDirection * (currentSpeed * Time.deltaTime));
 
             // Apply gravity
@@ -311,7 +313,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
                 return;
             }
 
-            // Get look input from new Input System
             var lookInput = m_InputManager.InputActions.Player.Look.ReadValue<Vector2>();
             var mouseX = lookInput.x * m_MouseSensitivity * Time.deltaTime;
             var mouseY = lookInput.y * m_MouseSensitivity * Time.deltaTime;

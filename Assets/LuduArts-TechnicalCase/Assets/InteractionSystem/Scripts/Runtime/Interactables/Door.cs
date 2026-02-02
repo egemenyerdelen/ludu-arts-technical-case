@@ -30,7 +30,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         [Header("Lock Settings")]
         [SerializeField] private bool m_IsLocked;
         [SerializeField] private KeyType m_RequiredKeyType = KeyType.None;
-        // [SerializeField] private bool m_ConsumeKeyOnUnlock = true;
+        [SerializeField] private bool m_ConsumeKeyOnUnlock = true;
 
         [Header("Animation")]
         [SerializeField] private Animator m_Animator;
@@ -85,6 +85,11 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         public string UniqueId => m_UniqueId;
 
         /// <summary>
+        /// Gets whether the key is consumed on unlock.
+        /// </summary>
+        public bool ConsumeKeyOnUnlock => m_ConsumeKeyOnUnlock;
+
+        /// <summary>
         /// Gets the current door state.
         /// </summary>
         public DoorState CurrentState
@@ -122,12 +127,12 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         protected override void Awake()
         {
             base.Awake();
-            
+
             m_AudioSource = GetComponent<AudioSource>();
-            
+
             if (m_AudioSource == null)
             {
-                Debug.LogError($"[Door] AudioSource component is missing.", this);
+                Debug.LogError("[Door] AudioSource component is missing.", this);
             }
 
             InitializeRotations();
@@ -136,7 +141,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
 
         protected override void Start()
         {
-            // Apply initial state based on configuration
             ApplyInitialState();
         }
 
@@ -144,13 +148,12 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         {
             base.OnValidate();
 
-            // Ensure animation duration is positive
             if (m_AnimationDuration <= 0f)
             {
                 m_AnimationDuration = k_DefaultAnimationDuration;
+                Debug.LogWarning("[Door] Animation duration must be positive, reset to default.", this);
             }
 
-            // Generate unique ID if empty
             if (string.IsNullOrEmpty(m_UniqueId))
             {
                 GenerateUniqueIdIfEmpty();
@@ -160,46 +163,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         #endregion
 
         #region Methods
-
-        /// <inheritdoc/>
-        public bool TryUnlock(KeyType keyType)
-        {
-            if (!m_IsLocked)
-            {
-                Debug.LogWarning("[Door] Door is not locked.", this);
-                return false;
-            }
-
-            if (m_RequiredKeyType == KeyType.None || keyType == m_RequiredKeyType)
-            {
-                Unlock();
-                return true;
-            }
-
-            Debug.Log($"[Door] Unlock failed. Required: {m_RequiredKeyType}, Provided: {keyType}", this);
-            PlaySound(m_LockedSound);
-            OnUnlockFailed?.Invoke(keyType);
-            return false;
-        }
-
-        /// <inheritdoc/>
-        public void Lock()
-        {
-            if (m_IsLocked)
-            {
-                return;
-            }
-
-            // Close door if open before locking
-            if (IsOn)
-            {
-                SetState(false);
-            }
-
-            m_IsLocked = true;
-            UpdateAnimatorLockState();
-            OnLockedEvent?.Invoke();
-        }
 
         /// <summary>
         /// Unlocks the door without requiring a key.
@@ -246,8 +209,52 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
             }
         }
 
+        #endregion
+
+        #region Interface Implementations
+
         /// <inheritdoc/>
-        public object GetSaveData()
+        bool ILockable.TryUnlock(KeyType keyType)
+        {
+            if (!m_IsLocked)
+            {
+                Debug.LogWarning("[Door] Door is not locked.", this);
+                return false;
+            }
+
+            if (m_RequiredKeyType == KeyType.None || keyType == m_RequiredKeyType)
+            {
+                Unlock();
+                return true;
+            }
+
+            Debug.Log($"[Door] Unlock failed. Required: {m_RequiredKeyType}, Provided: {keyType}", this);
+            PlaySound(m_LockedSound);
+            OnUnlockFailed?.Invoke(keyType);
+            return false;
+        }
+
+        /// <inheritdoc/>
+        void ILockable.Lock()
+        {
+            if (m_IsLocked)
+            {
+                return;
+            }
+
+            // Close door if open before locking
+            if (IsOn)
+            {
+                SetState(false);
+            }
+
+            m_IsLocked = true;
+            UpdateAnimatorLockState();
+            OnLockedEvent?.Invoke();
+        }
+
+        /// <inheritdoc/>
+        object ISaveable.GetSaveData()
         {
             return new DoorSaveData
             {
@@ -257,13 +264,11 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         }
 
         /// <inheritdoc/>
-        public void LoadSaveData(object data)
+        void ISaveable.LoadSaveData(object data)
         {
             if (data is DoorSaveData saveData)
             {
                 m_IsLocked = saveData.IsLocked;
-                
-                // Apply state without animation
                 ApplyState(saveData.IsOpen, false);
             }
             else
@@ -279,7 +284,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         /// <inheritdoc/>
         protected override void OnInteractInternal()
         {
-            // Check if locked first
             if (m_IsLocked)
             {
                 PlaySound(m_LockedSound);
@@ -287,7 +291,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
                 return;
             }
 
-            // Toggle the door
             base.OnInteractInternal();
         }
 
@@ -303,13 +306,11 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
                 SetRotationImmediate(isOn);
             }
 
-            // Play appropriate sound
             if (animate)
             {
                 PlaySound(isOn ? m_OpenSound : m_CloseSound);
             }
 
-            // Update animator
             if (m_UseAnimator && m_Animator != null)
             {
                 m_Animator.SetBool(k_AnimatorOpenParameter, isOn);

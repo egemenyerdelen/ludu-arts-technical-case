@@ -165,18 +165,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
             Destroy(gameObject, m_PickupSound != null ? m_PickupSound.length : 0.1f);
         }
 
-        /// <inheritdoc/>
-        protected override void OnFocusEnterInternal()
-        {
-            // Could add glow effect here
-        }
-
-        /// <inheritdoc/>
-        protected override void OnFocusExitInternal()
-        {
-            // Could remove glow effect here
-        }
-
         #endregion
 
         #region Private Methods

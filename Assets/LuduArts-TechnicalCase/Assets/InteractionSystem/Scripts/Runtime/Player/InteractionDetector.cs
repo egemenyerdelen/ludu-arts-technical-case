@@ -18,7 +18,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
         // Private constant fields
         private const float k_MinInteractionRange = 0.5f;
         private const float k_MaxInteractionRange = 10f;
-        private const float k_DefaultSpherecastRadius = 0.1f;
 
         // Serialized private instance fields
         [Header("Detection Settings")]
@@ -37,6 +36,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
 
         // Non-serialized private instance fields
         private Core.Managers.InputManager m_InputManager;
+        private PlayerInventory m_PlayerInventory;
         private IInteractable m_CurrentTarget;
         private GameObject m_CurrentTargetObject;
         private bool m_IsHolding;
@@ -98,13 +98,14 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
         private void Awake()
         {
             InitializeCamera();
+            InitializePlayerInventory();
             ValidateSetup();
         }
 
         private void Start()
         {
             m_InputManager = Core.Managers.InputManager.Instance;
-            
+
             if (m_InputManager == null)
             {
                 Debug.LogError("[InteractionDetector] InputManager instance not found!", this);
@@ -156,10 +157,19 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
         /// </summary>
         public void ForceInteract()
         {
-            if (m_CurrentTarget != null && m_CurrentTarget.CanInteract)
+            if (m_CurrentTarget == null)
             {
-                PerformInteraction();
+                Debug.LogWarning("[InteractionDetector] No target to force interact with.", this);
+                return;
             }
+
+            if (!m_CurrentTarget.CanInteract)
+            {
+                Debug.LogWarning("[InteractionDetector] Current target cannot be interacted with.", this);
+                return;
+            }
+
+            PerformInteraction();
         }
 
         /// <summary>
@@ -176,10 +186,14 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
 
         private void SubscribeToInputEvents()
         {
-            if (m_InputManager == null) return;
+            if (m_InputManager == null)
+            {
+                Debug.LogError("[InteractionDetector] Cannot subscribe to input events - InputManager is null.", this);
+                return;
+            }
 
             var interactAction = m_InputManager.InputActions.Player.Interact;
-            
+
             interactAction.started += OnInteractStarted;
             interactAction.performed += OnInteractPerformed;
             interactAction.canceled += OnInteractCanceled;
@@ -187,10 +201,13 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
 
         private void UnsubscribeFromInputEvents()
         {
-            if (m_InputManager == null) return;
+            if (m_InputManager == null)
+            {
+                return;
+            }
 
             var interactAction = m_InputManager.InputActions.Player.Interact;
-            
+
             interactAction.started -= OnInteractStarted;
             interactAction.performed -= OnInteractPerformed;
             interactAction.canceled -= OnInteractCanceled;
@@ -198,8 +215,15 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
 
         private void OnInteractStarted(InputAction.CallbackContext context)
         {
-            if (m_CurrentTarget == null || !m_CurrentTarget.CanInteract)
+            if (m_CurrentTarget == null)
             {
+                return;
+            }
+
+            // Try auto-unlock if target is a locked interactable and player has the key
+            if (!m_CurrentTarget.CanInteract)
+            {
+                TryAutoUnlock();
                 return;
             }
 
@@ -221,8 +245,8 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
 
         private void OnInteractPerformed(InputAction.CallbackContext context)
         {
-            // This fires when the button is fully pressed (after started)
-            // Can be used for additional logic if needed
+            // Fires when the button is fully pressed (after started).
+            // Reserved for additional logic if needed.
         }
 
         private void OnInteractCanceled(InputAction.CallbackContext context)
@@ -238,7 +262,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
             if (m_RaycastOrigin == null)
             {
                 m_Camera = Camera.main;
-                
+
                 if (m_Camera != null)
                 {
                     m_RaycastOrigin = m_Camera.transform;
@@ -250,12 +274,27 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
             }
         }
 
+        private void InitializePlayerInventory()
+        {
+            m_PlayerInventory = GetComponent<PlayerInventory>();
+
+            if (m_PlayerInventory == null)
+            {
+                m_PlayerInventory = GetComponentInParent<PlayerInventory>();
+            }
+
+            if (m_PlayerInventory == null)
+            {
+                Debug.LogWarning("[InteractionDetector] No PlayerInventory found on player. Auto-unlock will be disabled.", this);
+            }
+        }
+
         private void ValidateSetup()
         {
             if (m_UIManager == null)
             {
                 m_UIManager = FindAnyObjectByType<InteractionUIManager>();
-                
+
                 if (m_UIManager == null)
                 {
                     Debug.LogWarning("[InteractionDetector] No InteractionUIManager found in scene.", this);
@@ -273,35 +312,42 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
             IInteractable detectedInteractable = null;
             GameObject detectedObject = null;
 
-            // Perform raycast
             var ray = new Ray(m_RaycastOrigin.position, m_RaycastOrigin.forward);
-            RaycastHit hit;
             bool didHit;
 
             if (m_UseSpherecast && m_SpherecastRadius > 0f)
             {
-                didHit = Physics.SphereCast(ray, m_SpherecastRadius, out hit, m_InteractionRange, m_InteractionLayerMask);
+                didHit = Physics.SphereCast(ray, m_SpherecastRadius, out var hit, m_InteractionRange, m_InteractionLayerMask);
+
+                if (didHit)
+                {
+                    detectedInteractable = hit.collider.GetComponentInParent<IInteractable>();
+
+                    if (detectedInteractable != null)
+                    {
+                        detectedObject = hit.collider.gameObject;
+                    }
+                }
             }
             else
             {
-                didHit = Physics.Raycast(ray, out hit, m_InteractionRange, m_InteractionLayerMask);
+                didHit = Physics.Raycast(ray, out var hit, m_InteractionRange, m_InteractionLayerMask);
+
+                if (didHit)
+                {
+                    detectedInteractable = hit.collider.GetComponentInParent<IInteractable>();
+
+                    if (detectedInteractable != null)
+                    {
+                        detectedObject = hit.collider.gameObject;
+                    }
+                }
             }
 
             // Debug ray
             if (m_ShowDebugRay)
             {
                 Debug.DrawRay(ray.origin, ray.direction * m_InteractionRange, didHit ? Color.green : Color.red);
-            }
-
-            // Check for interactable
-            if (didHit)
-            {
-                detectedInteractable = hit.collider.GetComponentInParent<IInteractable>();
-                
-                if (detectedInteractable != null)
-                {
-                    detectedObject = hit.collider.gameObject;
-                }
             }
 
             // Update target if changed
@@ -355,7 +401,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
             }
 
             var holdDuration = m_CurrentTarget.HoldDuration;
-            
+
             if (holdDuration <= 0f)
             {
                 CompleteHold();
@@ -388,6 +434,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
         {
             if (m_CurrentTarget == null)
             {
+                Debug.LogWarning("[InteractionDetector] Cannot complete hold - target is null.", this);
                 return;
             }
 
@@ -422,6 +469,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
         {
             if (m_CurrentTarget == null)
             {
+                Debug.LogWarning("[InteractionDetector] Cannot perform interaction - target is null.", this);
                 return;
             }
 
@@ -430,6 +478,29 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
 
             // Refresh UI in case prompt changed
             UpdateUI();
+        }
+
+        private void TryAutoUnlock()
+        {
+            if (m_PlayerInventory == null || m_CurrentTargetObject == null)
+            {
+                return;
+            }
+
+            var lockable = m_CurrentTargetObject.GetComponent<ILockable>();
+
+            if (lockable == null || !lockable.IsLocked)
+            {
+                return;
+            }
+
+            var unlocked = m_PlayerInventory.TryUnlockWithKey(lockable);
+
+            if (unlocked)
+            {
+                Debug.Log($"[InteractionDetector] Auto-unlocked {m_CurrentTargetObject.name} with {lockable.RequiredKeyType} key.", this);
+                UpdateUI();
+            }
         }
 
         private void UpdateUI()
@@ -441,9 +512,8 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
 
             if (m_CurrentTarget != null && m_CurrentTarget.CanInteract)
             {
-                // Get the key binding display string from Input System
                 var keyBinding = GetInteractKeyBinding();
-                
+
                 m_UIManager.ShowPrompt(
                     m_CurrentTarget.InteractionPrompt,
                     keyBinding,
@@ -462,7 +532,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
             }
             else if (m_CurrentTarget != null && !m_CurrentTarget.CanInteract)
             {
-                // Show "cannot interact" feedback
                 m_UIManager.ShowCannotInteract(m_CurrentTarget.InteractionPrompt);
             }
             else
@@ -472,25 +541,21 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
             }
         }
 
-        /// <summary>
-        /// Gets the display string for the interact key binding.
-        /// </summary>
         private string GetInteractKeyBinding()
         {
             if (m_InputManager == null)
             {
-                return "E"; // Fallback
+                return "E";
             }
 
             var interactAction = m_InputManager.InputActions.Player.Interact;
-            
-            // Get the first binding's display string
+
             if (interactAction.bindings.Count > 0)
             {
                 return interactAction.GetBindingDisplayString(0);
             }
 
-            return "E"; // Fallback
+            return "E";
         }
 
         #endregion

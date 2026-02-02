@@ -74,15 +74,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
 
         #endregion
 
-        #region Unity Methods
-
-        private void Awake()
-        {
-            InitializeKeyDictionary();
-        }
-
-        #endregion
-
         #region Methods
 
         /// <summary>
@@ -160,11 +151,12 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
         {
             if (!HasKey(keyType))
             {
+                Debug.LogWarning($"[PlayerInventory] Cannot use {keyType} key - not in inventory.", this);
                 return false;
             }
 
             var removed = RemoveKey(keyType);
-            
+
             if (removed)
             {
                 OnKeyUsed?.Invoke(keyType);
@@ -228,7 +220,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
 
             if (!lockable.IsLocked)
             {
-                return true; // Already unlocked
+                return true;
             }
 
             var requiredKey = lockable.RequiredKeyType;
@@ -274,11 +266,15 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
             OnInventoryChanged?.Invoke();
         }
 
+        #endregion
+
+        #region Interface Implementations
+
         /// <inheritdoc/>
-        public object GetSaveData()
+        object ISaveable.GetSaveData()
         {
             var keyList = new List<KeySaveEntry>();
-            
+
             foreach (var kvp in m_Keys)
             {
                 keyList.Add(new KeySaveEntry
@@ -295,7 +291,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
         }
 
         /// <inheritdoc/>
-        public void LoadSaveData(object data)
+        void ISaveable.LoadSaveData(object data)
         {
             if (data is InventorySaveData saveData)
             {
@@ -316,37 +312,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
 
         #endregion
 
-        #region Private Methods
-
-        private void InitializeKeyDictionary()
-        {
-            // Pre-initialize dictionary for all key types except None
-            foreach (KeyType keyType in Enum.GetValues(typeof(KeyType)))
-            {
-                if (keyType != KeyType.None && !m_Keys.ContainsKey(keyType))
-                {
-                    m_Keys[keyType] = 0;
-                }
-            }
-
-            // Remove zero-count entries for cleaner tracking
-            var keysToRemove = new List<KeyType>();
-            foreach (var kvp in m_Keys)
-            {
-                if (kvp.Value <= 0)
-                {
-                    keysToRemove.Add(kvp.Key);
-                }
-            }
-
-            foreach (var key in keysToRemove)
-            {
-                m_Keys.Remove(key);
-            }
-        }
-
-        #endregion
-
         #region Nested Types
 
         /// <summary>
@@ -355,10 +320,30 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
         [Serializable]
         public class InventoryItem
         {
-            public string ItemId;
-            public string DisplayName;
-            public int Quantity;
-            public Sprite Icon;
+            [SerializeField] private string m_ItemId;
+            [SerializeField] private string m_DisplayName;
+            [SerializeField] private int m_Quantity;
+            [SerializeField] private Sprite m_Icon;
+
+            /// <summary>
+            /// Gets the item identifier.
+            /// </summary>
+            public string ItemId => m_ItemId;
+
+            /// <summary>
+            /// Gets the display name.
+            /// </summary>
+            public string DisplayName => m_DisplayName;
+
+            /// <summary>
+            /// Gets the quantity.
+            /// </summary>
+            public int Quantity => m_Quantity;
+
+            /// <summary>
+            /// Gets the icon sprite.
+            /// </summary>
+            public Sprite Icon => m_Icon;
         }
 
         /// <summary>

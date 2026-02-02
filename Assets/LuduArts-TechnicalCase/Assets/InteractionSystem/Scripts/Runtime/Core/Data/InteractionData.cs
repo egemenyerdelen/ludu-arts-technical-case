@@ -12,30 +12,40 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.D
     {
         #region Fields
 
-        /// <summary>
-        /// The GameObject that was interacted with.
-        /// </summary>
-        public GameObject m_Target;
+        [SerializeField] private GameObject m_Target;
+        [SerializeField] private InteractionType m_InteractionType;
+        [SerializeField] private GameObject m_Interactor;
+        [SerializeField] private Vector3 m_InteractionPoint;
+        [SerializeField] private float m_Timestamp;
+
+        #endregion
+
+        #region Properties
 
         /// <summary>
-        /// The type of interaction that occurred.
+        /// Gets the GameObject that was interacted with.
         /// </summary>
-        public InteractionType m_InteractionType;
+        public GameObject Target => m_Target;
 
         /// <summary>
-        /// The GameObject that initiated the interaction (usually the player).
+        /// Gets the type of interaction that occurred.
         /// </summary>
-        public GameObject m_Interactor;
+        public InteractionType InteractionType => m_InteractionType;
 
         /// <summary>
-        /// The world position where the interaction occurred.
+        /// Gets the GameObject that initiated the interaction (usually the player).
         /// </summary>
-        public Vector3 m_InteractionPoint;
+        public GameObject Interactor => m_Interactor;
 
         /// <summary>
-        /// The time when the interaction occurred.
+        /// Gets the world position where the interaction occurred.
         /// </summary>
-        public float m_Timestamp;
+        public Vector3 InteractionPoint => m_InteractionPoint;
+
+        /// <summary>
+        /// Gets the time when the interaction occurred.
+        /// </summary>
+        public float Timestamp => m_Timestamp;
 
         #endregion
 

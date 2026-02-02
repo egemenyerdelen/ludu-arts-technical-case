@@ -8,24 +8,32 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.D
     {
         #region Fields
 
-        /// <summary>
-        /// Whether the interaction was successful.
-        /// </summary>
-        public bool m_Success;
-
-        /// <summary>
-        /// Message describing the result (for UI feedback).
-        /// </summary>
-        public string m_Message;
-
-        /// <summary>
-        /// Optional error code for failed interactions.
-        /// </summary>
-        public InteractionFailReason m_FailReason;
+        private bool m_Success;
+        private string m_Message;
+        private InteractionFailReason m_FailReason;
 
         #endregion
 
-        #region Static Factory Methods
+        #region Properties
+
+        /// <summary>
+        /// Gets whether the interaction was successful.
+        /// </summary>
+        public bool Success => m_Success;
+
+        /// <summary>
+        /// Gets the message describing the result (for UI feedback).
+        /// </summary>
+        public string Message => m_Message;
+
+        /// <summary>
+        /// Gets the reason for failure, if the interaction failed.
+        /// </summary>
+        public InteractionFailReason FailReason => m_FailReason;
+
+        #endregion
+
+        #region Methods
 
         /// <summary>
         /// Creates a successful interaction result.

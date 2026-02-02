@@ -48,8 +48,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
 
         // Non-serialized private instance fields
         private AudioSource m_AudioSource;
-        private Quaternion m_OffRotation;
-        private Quaternion m_OnRotation;
         private float m_CurrentLeverAngle;
         private float m_TargetLeverAngle;
 
@@ -91,22 +89,21 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         protected override void Awake()
         {
             base.Awake();
-            
+
             m_AudioSource = GetComponent<AudioSource>();
-            
+
             if (m_AudioSource == null)
             {
                 Debug.LogError("[Switch] AudioSource component is missing.", this);
             }
 
-            InitializeLeverRotations();
             GenerateUniqueIdIfEmpty();
         }
 
         protected override void Start()
         {
             base.Start();
-            
+
             // Initialize lever position
             m_CurrentLeverAngle = IsOn ? m_LeverAngle : -m_LeverAngle;
             m_TargetLeverAngle = m_CurrentLeverAngle;
@@ -162,8 +159,12 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
             m_ConnectedObjects.Remove(target);
         }
 
+        #endregion
+
+        #region Interface Implementations
+
         /// <inheritdoc/>
-        public object GetSaveData()
+        object ISaveable.GetSaveData()
         {
             return new SwitchSaveData
             {
@@ -172,11 +173,10 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         }
 
         /// <inheritdoc/>
-        public void LoadSaveData(object data)
+        void ISaveable.LoadSaveData(object data)
         {
             if (data is SwitchSaveData saveData)
             {
-                // Apply state without animation
                 SetState(saveData.IsOn);
             }
             else
@@ -225,7 +225,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
             {
                 m_OnSwitchOff?.Invoke();
             }
-            
+
             m_OnSwitchStateChanged?.Invoke(isOn);
         }
 
@@ -248,17 +248,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
 
         #region Private Methods
 
-        private void InitializeLeverRotations()
-        {
-            if (m_LeverPivot == null)
-            {
-                return;
-            }
-
-            m_OffRotation = m_LeverPivot.localRotation * Quaternion.Euler(-m_LeverAngle, 0f, 0f);
-            m_OnRotation = m_LeverPivot.localRotation * Quaternion.Euler(m_LeverAngle, 0f, 0f);
-        }
-
         private void UpdateLeverAnimation()
         {
             if (m_LeverPivot == null)
@@ -274,7 +263,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
                     m_TargetLeverAngle,
                     m_AnimationSpeed * m_LeverAngle * 2f * Time.deltaTime
                 );
-                
+
                 ApplyLeverRotation();
             }
         }
@@ -297,10 +286,10 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
             {
                 if (obj == null)
                 {
+                    Debug.LogWarning("[Switch] Null connected object found, skipping.", this);
                     continue;
                 }
 
-                // Try IToggleable first
                 var toggleable = obj.GetComponent<IToggleable>();
                 if (toggleable != null)
                 {
@@ -308,7 +297,8 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
                     continue;
                 }
 
-                // Try Door specifically
+                // Fallback: try Door-specific Open/Close for locked doors
+                // (locked doors block IToggleable.SetState, so we use Open/Close)
                 var door = obj.GetComponent<Door>();
                 if (door != null)
                 {

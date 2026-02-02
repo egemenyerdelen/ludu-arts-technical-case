@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Base;
+using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Enums;
 using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Interfaces;
 using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player;
 using UnityEngine;
@@ -114,7 +115,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         {
             get
             {
-                // Can interact if not opened, or if opened but contents not collected
                 if (m_IsOpened)
                 {
                     return !m_ContentsCollected && m_Contents.Count > 0;
@@ -130,9 +130,9 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         protected override void Awake()
         {
             base.Awake();
-            
+
             m_AudioSource = GetComponent<AudioSource>();
-            
+
             if (m_AudioSource == null)
             {
                 Debug.LogError("[Chest] AudioSource component is missing.", this);
@@ -163,6 +163,12 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         /// <param name="content">The content to add.</param>
         public void AddContent(ChestContent content)
         {
+            if (content == null)
+            {
+                Debug.LogError("[Chest] Cannot add null content.", this);
+                return;
+            }
+
             m_Contents.Add(content);
         }
 
@@ -185,7 +191,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
             }
 
             var inventory = FindPlayerInventory();
-            
+
             foreach (var content in m_Contents)
             {
                 CollectContent(content, inventory);
@@ -198,8 +204,12 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
             Debug.Log($"[Chest] Collected {m_Contents.Count} items from chest.", this);
         }
 
+        #endregion
+
+        #region Interface Implementations
+
         /// <inheritdoc/>
-        public object GetSaveData()
+        object ISaveable.GetSaveData()
         {
             return new ChestSaveData
             {
@@ -209,14 +219,13 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         }
 
         /// <inheritdoc/>
-        public void LoadSaveData(object data)
+        void ISaveable.LoadSaveData(object data)
         {
             if (data is ChestSaveData saveData)
             {
                 m_IsOpened = saveData.IsOpened;
                 m_ContentsCollected = saveData.ContentsCollected;
 
-                // Apply visual state
                 if (m_IsOpened)
                 {
                     SetLidRotation(1f);
@@ -244,17 +253,14 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         protected override void OnHoldUpdate(float progress)
         {
             m_CurrentOpenProgress = progress;
-            
-            // Update lid rotation based on progress
+
             SetLidRotation(progress);
 
-            // Update animator
             if (m_UseAnimator && m_Animator != null)
             {
                 m_Animator.SetFloat(k_AnimatorProgressParameter, progress);
             }
 
-            // Update glow intensity
             if (m_GlowLight != null)
             {
                 m_GlowLight.intensity = Mathf.Lerp(0f, m_GlowIntensity, progress);
@@ -267,20 +273,16 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
             m_IsOpened = true;
             m_CurrentOpenProgress = 1f;
 
-            // Ensure lid is fully open
             SetLidRotation(1f);
 
-            // Update animator
             if (m_UseAnimator && m_Animator != null)
             {
                 m_Animator.SetBool(k_AnimatorOpenParameter, true);
             }
 
-            // Play effects
             PlaySound(m_OpenedSound);
             PlayOpenVFX();
 
-            // Give contents if configured
             if (m_GiveContentsOnOpen)
             {
                 CollectContents();
@@ -293,7 +295,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         /// <inheritdoc/>
         protected override void OnHoldCancelledInternal()
         {
-            // Reset lid if cancelled
             StartCoroutine(AnimateLidClose());
         }
 
@@ -315,6 +316,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         {
             if (m_LidPivot == null)
             {
+                Debug.LogWarning("[Chest] Lid pivot is not assigned. Lid animation will not work.", this);
                 return;
             }
 
@@ -349,7 +351,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
             SetLidRotation(0f);
             m_CurrentOpenProgress = 0f;
 
-            // Reset glow
             if (m_GlowLight != null)
             {
                 m_GlowLight.intensity = 0f;
@@ -389,11 +390,26 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
                     {
                         inventory.AddKey(content.KeyItem.KeyType, content.KeyItem);
                     }
+                    else
+                    {
+                        Debug.LogWarning($"[Chest] Cannot collect key content: inventory={inventory != null}, keyItem={content.KeyItem != null}", this);
+                    }
                     break;
 
                 case ChestContentType.Generic:
-                    // Handle generic items
                     Debug.Log($"[Chest] Collected generic item: {content.ItemName}", this);
+                    break;
+
+                case ChestContentType.Consumable:
+                    Debug.Log($"[Chest] Collected consumable: {content.ItemName}", this);
+                    break;
+
+                case ChestContentType.Equipment:
+                    Debug.Log($"[Chest] Collected equipment: {content.ItemName}", this);
+                    break;
+
+                default:
+                    Debug.LogWarning($"[Chest] Unknown content type: {content.ContentType}", this);
                     break;
             }
         }
@@ -401,7 +417,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         private PlayerInventory FindPlayerInventory()
         {
             var player = GameObject.FindGameObjectWithTag("Player");
-            
+
             if (player != null)
             {
                 return player.GetComponent<PlayerInventory>();
@@ -436,11 +452,36 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         [Serializable]
         public class ChestContent
         {
-            public ChestContentType ContentType;
-            public string ItemName;
-            public int Quantity = 1;
-            public SO_KeyItem KeyItem;
-            public Sprite Icon;
+            [SerializeField] private ChestContentType m_ContentType;
+            [SerializeField] private string m_ItemName;
+            [SerializeField] private int m_Quantity = 1;
+            [SerializeField] private SO_KeyItem m_KeyItem;
+            [SerializeField] private Sprite m_Icon;
+
+            /// <summary>
+            /// Gets the content type.
+            /// </summary>
+            public ChestContentType ContentType => m_ContentType;
+
+            /// <summary>
+            /// Gets the item name.
+            /// </summary>
+            public string ItemName => m_ItemName;
+
+            /// <summary>
+            /// Gets the quantity.
+            /// </summary>
+            public int Quantity => m_Quantity;
+
+            /// <summary>
+            /// Gets the key item data (for Key content type).
+            /// </summary>
+            public SO_KeyItem KeyItem => m_KeyItem;
+
+            /// <summary>
+            /// Gets the icon sprite.
+            /// </summary>
+            public Sprite Icon => m_Icon;
         }
 
         /// <summary>
