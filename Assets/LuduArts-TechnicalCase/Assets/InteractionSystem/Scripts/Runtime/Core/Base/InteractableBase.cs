@@ -178,7 +178,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
             }
 
             m_OriginalMaterials = new Material[m_Renderers.Length];
-            for (int i = 0; i < m_Renderers.Length; i++)
+            for (var i = 0; i < m_Renderers.Length; i++)
             {
                 if (m_Renderers[i] != null)
                 {
@@ -194,13 +194,13 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
                 return;
             }
 
-            for (int i = 0; i < m_Renderers.Length; i++)
+            for (var i = 0; i < m_Renderers.Length; i++)
             {
                 if (m_Renderers[i] != null)
                 {
                     // Add highlight material as additional material
-                    Material[] materials = m_Renderers[i].materials;
-                    Material[] newMaterials = new Material[materials.Length + 1];
+                    var materials = m_Renderers[i].materials;
+                    var newMaterials = new Material[materials.Length + 1];
                     materials.CopyTo(newMaterials, 0);
                     newMaterials[materials.Length] = m_HighlightMaterial;
                     m_Renderers[i].materials = newMaterials;
@@ -215,7 +215,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
                 return;
             }
 
-            for (int i = 0; i < m_Renderers.Length; i++)
+            for (var i = 0; i < m_Renderers.Length; i++)
             {
                 if (m_Renderers[i] != null && m_OriginalMaterials[i] != null)
                 {

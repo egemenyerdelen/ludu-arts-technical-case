@@ -1,4 +1,4 @@
-namespace InteractionSystem.Runtime.Core.Interfaces
+namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Interfaces
 {
     /// <summary>
     /// Interface for objects that can save and load their state.

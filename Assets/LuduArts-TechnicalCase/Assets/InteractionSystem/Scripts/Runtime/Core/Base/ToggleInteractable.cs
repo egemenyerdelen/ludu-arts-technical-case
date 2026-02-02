@@ -1,6 +1,6 @@
 using System;
-using InteractionSystem.Runtime.Core.Interfaces;
 using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Enums;
+using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Interfaces;
 using UnityEngine;
 
 namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Base
@@ -78,7 +78,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
                 return;
             }
 
-            bool previousState = m_IsOn;
+            var previousState = m_IsOn;
             m_IsOn = isOn;
 
             ApplyState(m_IsOn, true);
@@ -105,7 +105,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
         }
 
         /// <inheritdoc/>
-        protected sealed override void OnInteractInternal()
+        protected override void OnInteractInternal()
         {
             Toggle();
         }

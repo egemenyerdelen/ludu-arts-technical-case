@@ -200,7 +200,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
         /// <summary>
         /// Not used for hold interactions - use OnHoldCompleteInternal instead.
         /// </summary>
-        protected sealed override void OnInteractInternal()
+        protected override void OnInteractInternal()
         {
             // Hold interactions don't use instant interact
             Debug.LogWarning($"[{GetType().Name}] Hold interaction triggered via OnInteract. Use hold methods instead.", this);

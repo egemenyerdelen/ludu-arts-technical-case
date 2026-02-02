@@ -1,6 +1,6 @@
 using System;
 
-namespace InteractionSystem.Runtime.Core.Interfaces
+namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Interfaces
 {
     /// <summary>
     /// Interface for objects that can be toggled between on/off states.
