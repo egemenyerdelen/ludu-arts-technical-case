@@ -3,6 +3,7 @@ using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Enums
 using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Interfaces;
 using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.UI;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
 {
@@ -27,10 +28,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
         [SerializeField] private bool m_UseSpherecast = true;
         [SerializeField] private float m_SpherecastRadius = 0.1f;
 
-        [Header("Input Settings")]
-        [SerializeField] private KeyCode m_InteractionKey = KeyCode.E;
-        [SerializeField] private bool m_UseInputSystem;
-
         [Header("UI Reference")]
         [SerializeField] private InteractionUIManager m_UIManager;
 
@@ -39,6 +36,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
         [SerializeField] private Color m_DebugRayColor = Color.green;
 
         // Non-serialized private instance fields
+        private Core.Managers.InputManager m_InputManager;
         private IInteractable m_CurrentTarget;
         private GameObject m_CurrentTargetObject;
         private bool m_IsHolding;
@@ -103,11 +101,29 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
             ValidateSetup();
         }
 
+        private void Start()
+        {
+            m_InputManager = Core.Managers.InputManager.Instance;
+            
+            if (m_InputManager == null)
+            {
+                Debug.LogError("[InteractionDetector] InputManager instance not found!", this);
+                enabled = false;
+                return;
+            }
+
+            SubscribeToInputEvents();
+        }
+
         private void Update()
         {
             UpdateDetection();
-            HandleInput();
             UpdateHoldProgress();
+        }
+
+        private void OnDestroy()
+        {
+            UnsubscribeFromInputEvents();
         }
 
         private void OnValidate()
@@ -123,8 +139,8 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
                 return;
             }
 
-            Transform origin = m_RaycastOrigin != null ? m_RaycastOrigin : transform;
-            Vector3 direction = origin.forward;
+            var origin = m_RaycastOrigin != null ? m_RaycastOrigin : transform;
+            var direction = origin.forward;
 
             Gizmos.color = m_DebugRayColor;
             Gizmos.DrawRay(origin.position, direction * m_InteractionRange);
@@ -154,18 +170,68 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
             SetTarget(null, null);
         }
 
-        /// <summary>
-        /// Sets the interaction key.
-        /// </summary>
-        /// <param name="key">The new interaction key.</param>
-        public void SetInteractionKey(KeyCode key)
-        {
-            m_InteractionKey = key;
-        }
-
         #endregion
 
         #region Private Methods
+
+        private void SubscribeToInputEvents()
+        {
+            if (m_InputManager == null) return;
+
+            var interactAction = m_InputManager.InputActions.Player.Interact;
+            
+            interactAction.started += OnInteractStarted;
+            interactAction.performed += OnInteractPerformed;
+            interactAction.canceled += OnInteractCanceled;
+        }
+
+        private void UnsubscribeFromInputEvents()
+        {
+            if (m_InputManager == null) return;
+
+            var interactAction = m_InputManager.InputActions.Player.Interact;
+            
+            interactAction.started -= OnInteractStarted;
+            interactAction.performed -= OnInteractPerformed;
+            interactAction.canceled -= OnInteractCanceled;
+        }
+
+        private void OnInteractStarted(InputAction.CallbackContext context)
+        {
+            if (m_CurrentTarget == null || !m_CurrentTarget.CanInteract)
+            {
+                return;
+            }
+
+            switch (m_CurrentTarget.InteractionType)
+            {
+                case InteractionType.Instant:
+                case InteractionType.Toggle:
+                    PerformInteraction();
+                    break;
+
+                case InteractionType.Hold:
+                    if (!m_IsHolding)
+                    {
+                        StartHold();
+                    }
+                    break;
+            }
+        }
+
+        private void OnInteractPerformed(InputAction.CallbackContext context)
+        {
+            // This fires when the button is fully pressed (after started)
+            // Can be used for additional logic if needed
+        }
+
+        private void OnInteractCanceled(InputAction.CallbackContext context)
+        {
+            if (m_IsHolding)
+            {
+                CancelHold();
+            }
+        }
 
         private void InitializeCamera()
         {
@@ -208,7 +274,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
             GameObject detectedObject = null;
 
             // Perform raycast
-            Ray ray = new Ray(m_RaycastOrigin.position, m_RaycastOrigin.forward);
+            var ray = new Ray(m_RaycastOrigin.position, m_RaycastOrigin.forward);
             RaycastHit hit;
             bool didHit;
 
@@ -271,49 +337,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
             OnTargetChanged?.Invoke(m_CurrentTarget);
         }
 
-        private void HandleInput()
-        {
-            if (m_CurrentTarget == null || !m_CurrentTarget.CanInteract)
-            {
-                if (m_IsHolding)
-                {
-                    CancelHold();
-                }
-                return;
-            }
-
-            bool interactPressed = Input.GetKeyDown(m_InteractionKey);
-            bool interactHeld = Input.GetKey(m_InteractionKey);
-            bool interactReleased = Input.GetKeyUp(m_InteractionKey);
-
-            switch (m_CurrentTarget.InteractionType)
-            {
-                case InteractionType.Instant:
-                case InteractionType.Toggle:
-                    if (interactPressed)
-                    {
-                        PerformInteraction();
-                    }
-                    break;
-
-                case InteractionType.Hold:
-                    HandleHoldInput(interactPressed, interactHeld, interactReleased);
-                    break;
-            }
-        }
-
-        private void HandleHoldInput(bool pressed, bool held, bool released)
-        {
-            if (pressed && !m_IsHolding)
-            {
-                StartHold();
-            }
-            else if (released && m_IsHolding)
-            {
-                CancelHold();
-            }
-        }
-
         private void StartHold()
         {
             m_IsHolding = true;
@@ -331,7 +354,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
                 return;
             }
 
-            float holdDuration = m_CurrentTarget.HoldDuration;
+            var holdDuration = m_CurrentTarget.HoldDuration;
             
             if (holdDuration <= 0f)
             {
@@ -339,7 +362,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
                 return;
             }
 
-            float elapsed = Time.time - m_HoldStartTime;
+            var elapsed = Time.time - m_HoldStartTime;
             m_CurrentHoldProgress = Mathf.Clamp01(elapsed / holdDuration);
 
             // Notify target of progress
@@ -418,9 +441,12 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
 
             if (m_CurrentTarget != null && m_CurrentTarget.CanInteract)
             {
+                // Get the key binding display string from Input System
+                var keyBinding = GetInteractKeyBinding();
+                
                 m_UIManager.ShowPrompt(
                     m_CurrentTarget.InteractionPrompt,
-                    m_InteractionKey.ToString(),
+                    keyBinding,
                     m_CurrentTarget.InteractionType
                 );
 
@@ -444,6 +470,27 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
                 m_UIManager.HidePrompt();
                 m_UIManager.HideHoldProgress();
             }
+        }
+
+        /// <summary>
+        /// Gets the display string for the interact key binding.
+        /// </summary>
+        private string GetInteractKeyBinding()
+        {
+            if (m_InputManager == null)
+            {
+                return "E"; // Fallback
+            }
+
+            var interactAction = m_InputManager.InputActions.Player.Interact;
+            
+            // Get the first binding's display string
+            if (interactAction.bindings.Count > 0)
+            {
+                return interactAction.GetBindingDisplayString(0);
+            }
+
+            return "E"; // Fallback
         }
 
         #endregion

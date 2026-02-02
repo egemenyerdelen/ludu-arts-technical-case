@@ -18,7 +18,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.M
             }
             
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+            // DontDestroyOnLoad(gameObject);
             
             InputActions = new InputSystem_Actions();
             InputActions.Enable();
