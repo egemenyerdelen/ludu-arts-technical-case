@@ -268,9 +268,9 @@ MonoBehaviour:
   m_InitialState: 0
   m_OpenAngle: 90
   m_AnimationDuration: 1
-  m_PivotPoint: {fileID: 6707689221402139913}
-  m_IsLocked: 0
-  m_RequiredKeyType: 0
+  m_PivotPoint: {fileID: 2768736727464763604}
+  m_IsLocked: 1
+  m_RequiredKeyType: 2
   m_ConsumeKeyOnUnlock: 1
   m_Animator: {fileID: 0}
   m_UseAnimator: 0

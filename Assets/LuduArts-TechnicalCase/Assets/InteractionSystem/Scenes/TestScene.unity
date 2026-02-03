@@ -2739,6 +2739,11 @@ MonoBehaviour:
   m_PointerBehavior: 0
   m_CursorLockBehavior: 0
   m_ScrollDeltaPerTick: 6
+--- !u!4 &2076096772 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2355742335306050473, guid: 1a32d853582c49646be2bb1445015726, type: 3}
+  m_PrefabInstance: {fileID: 7189666278342660484}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &571079628550875984
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2812,6 +2817,10 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 2b0c446e5719c3a4da789f8c7c03fe9c, type: 2}
+    - target: {fileID: 1542806906468841482, guid: 1a32d853582c49646be2bb1445015726, type: 3}
+      propertyPath: m_LeverPivot
+      value: 
+      objectReference: {fileID: 2076096772}
     - target: {fileID: 6073571126024810633, guid: 1a32d853582c49646be2bb1445015726, type: 3}
       propertyPath: m_Name
       value: Switch
@@ -2877,6 +2886,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1295330926}
     m_Modifications:
+    - target: {fileID: 890128439151220789, guid: 04fa458662b9a064bb7fc2cd98285353, type: 3}
+      propertyPath: m_IsLocked
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 890128439151220789, guid: 04fa458662b9a064bb7fc2cd98285353, type: 3}
+      propertyPath: m_RequiredKeyType
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 890128439151220789, guid: 04fa458662b9a064bb7fc2cd98285353, type: 3}
+      propertyPath: m_ConsumeKeyOnUnlock
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2768736727464763604, guid: 04fa458662b9a064bb7fc2cd98285353, type: 3}
       propertyPath: m_LocalPosition.x
       value: -2

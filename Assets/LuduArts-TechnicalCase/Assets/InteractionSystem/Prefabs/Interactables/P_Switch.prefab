@@ -28,7 +28,7 @@ Transform:
   m_GameObject: {fileID: 3401126149906096868}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.05, z: 0}
+  m_LocalPosition: {x: 0, y: 0.05, z: 0.1}
   m_LocalScale: {x: 0.2, y: 0.1, z: 0.4}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -380,7 +380,7 @@ MonoBehaviour:
   m_InvertConnectedState: 0
   m_Animator: {fileID: 0}
   m_UseAnimator: 0
-  m_LeverPivot: {fileID: 0}
+  m_LeverPivot: {fileID: 2355742335306050473}
   m_LeverAngle: 45
   m_AnimationSpeed: 5
   m_SwitchOnSound: {fileID: 0}
