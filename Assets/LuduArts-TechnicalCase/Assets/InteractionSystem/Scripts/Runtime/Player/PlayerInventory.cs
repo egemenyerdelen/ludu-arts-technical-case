@@ -10,7 +10,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
     /// <summary>
     /// Simple inventory system for storing keys and checking requirements.
     /// </summary>
-    public class PlayerInventory : MonoBehaviour, ISaveable
+    public class PlayerInventory : MonoBehaviour
     {
         #region Fields
 
@@ -264,50 +264,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
             ClearKeys();
             m_Items.Clear();
             OnInventoryChanged?.Invoke();
-        }
-
-        #endregion
-
-        #region Interface Implementations
-
-        /// <inheritdoc/>
-        object ISaveable.GetSaveData()
-        {
-            var keyList = new List<KeySaveEntry>();
-
-            foreach (var kvp in m_Keys)
-            {
-                keyList.Add(new KeySaveEntry
-                {
-                    KeyType = kvp.Key,
-                    Count = kvp.Value
-                });
-            }
-
-            return new InventorySaveData
-            {
-                Keys = keyList
-            };
-        }
-
-        /// <inheritdoc/>
-        void ISaveable.LoadSaveData(object data)
-        {
-            if (data is InventorySaveData saveData)
-            {
-                ClearKeys();
-
-                foreach (var entry in saveData.Keys)
-                {
-                    m_Keys[entry.KeyType] = entry.Count;
-                }
-
-                OnInventoryChanged?.Invoke();
-            }
-            else
-            {
-                Debug.LogError("[PlayerInventory] Invalid save data type.", this);
-            }
         }
 
         #endregion

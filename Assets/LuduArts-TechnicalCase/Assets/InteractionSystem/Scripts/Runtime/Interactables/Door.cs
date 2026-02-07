@@ -11,7 +11,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
     /// Supports animations, sounds, and can be triggered by switches.
     /// </summary>
     [RequireComponent(typeof(AudioSource))]
-    public class Door : ToggleInteractable, ILockable, ISaveable
+    public class Door : ToggleInteractable, ILockable
     {
         #region Fields
 
@@ -23,7 +23,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         // Serialized private instance fields
         [Header("Door Settings")]
         [SerializeField] private DoorState m_InitialState = DoorState.Closed;
-        [SerializeField] private float m_OpenAngle = 90f;
+        [SerializeField] private float m_OpenAngle = -90f;
         [SerializeField] private float m_AnimationDuration = 1f;
         [SerializeField] private Transform m_PivotPoint;
 
@@ -252,31 +252,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
             UpdateAnimatorLockState();
             OnLockedEvent?.Invoke();
         }
-
-        /// <inheritdoc/>
-        object ISaveable.GetSaveData()
-        {
-            return new DoorSaveData
-            {
-                IsOpen = IsOn,
-                IsLocked = m_IsLocked
-            };
-        }
-
-        /// <inheritdoc/>
-        void ISaveable.LoadSaveData(object data)
-        {
-            if (data is DoorSaveData saveData)
-            {
-                m_IsLocked = saveData.IsLocked;
-                ApplyState(saveData.IsOpen, false);
-            }
-            else
-            {
-                Debug.LogError("[Door] Invalid save data type.", this);
-            }
-        }
-
+        
         #endregion
 
         #region Protected Override Methods

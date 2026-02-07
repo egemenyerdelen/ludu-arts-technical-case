@@ -13,7 +13,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
     /// Contains items that can be collected by the player.
     /// </summary>
     [RequireComponent(typeof(AudioSource))]
-    public class Chest : HoldInteractable, ISaveable
+    public class Chest : HoldInteractable
     {
         #region Fields
 
@@ -202,40 +202,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
             OnContentsCollected?.Invoke(new List<ChestContent>(m_Contents));
 
             Debug.Log($"[Chest] Collected {m_Contents.Count} items from chest.", this);
-        }
-
-        #endregion
-
-        #region Interface Implementations
-
-        /// <inheritdoc/>
-        object ISaveable.GetSaveData()
-        {
-            return new ChestSaveData
-            {
-                IsOpened = m_IsOpened,
-                ContentsCollected = m_ContentsCollected
-            };
-        }
-
-        /// <inheritdoc/>
-        void ISaveable.LoadSaveData(object data)
-        {
-            if (data is ChestSaveData saveData)
-            {
-                m_IsOpened = saveData.IsOpened;
-                m_ContentsCollected = saveData.ContentsCollected;
-
-                if (m_IsOpened)
-                {
-                    SetLidRotation(1f);
-                    DisableGlow();
-                }
-            }
-            else
-            {
-                Debug.LogError("[Chest] Invalid save data type.", this);
-            }
         }
 
         #endregion

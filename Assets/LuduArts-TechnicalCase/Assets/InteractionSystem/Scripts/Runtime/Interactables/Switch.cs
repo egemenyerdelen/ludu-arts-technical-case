@@ -12,7 +12,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
     /// Supports chained interactions via events.
     /// </summary>
     [RequireComponent(typeof(AudioSource))]
-    public class Switch : ToggleInteractable, ISaveable
+    public class Switch : ToggleInteractable
     {
         #region Fields
 
@@ -157,32 +157,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         public void RemoveConnectedObject(GameObject target)
         {
             m_ConnectedObjects.Remove(target);
-        }
-
-        #endregion
-
-        #region Interface Implementations
-
-        /// <inheritdoc/>
-        object ISaveable.GetSaveData()
-        {
-            return new SwitchSaveData
-            {
-                IsOn = IsOn
-            };
-        }
-
-        /// <inheritdoc/>
-        void ISaveable.LoadSaveData(object data)
-        {
-            if (data is SwitchSaveData saveData)
-            {
-                SetState(saveData.IsOn);
-            }
-            else
-            {
-                Debug.LogError("[Switch] Invalid save data type.", this);
-            }
         }
 
         #endregion
