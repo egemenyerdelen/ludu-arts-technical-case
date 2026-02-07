@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc8c701ad0901ea45936d90b265f375e, type: 3}
+  m_Name: SO_GoldKey
+  m_EditorClassIdentifier: Assembly-CSharp::LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Interactables.SO_KeyItem
+  m_DisplayName: Key
+  m_KeyType: 1
+  m_Description: A key that opens golden doors.
+  m_Icon: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
+  m_KeyColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  m_WorldPrefab: {fileID: 8778577181773724146, guid: b35cf91381aba0f46acefe8b15e87470, type: 3}
+  m_PickupSound: {fileID: 0}
+  m_UseSound: {fileID: 0}

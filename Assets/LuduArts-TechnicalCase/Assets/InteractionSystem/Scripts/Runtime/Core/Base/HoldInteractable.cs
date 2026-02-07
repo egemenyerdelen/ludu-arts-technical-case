@@ -1,5 +1,6 @@
 using System;
 using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Enums;
+using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player;
 using UnityEngine;
 
 namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Base
@@ -140,7 +141,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
         #region Protected Override Methods
 
         /// <inheritdoc/>
-        protected sealed override void OnHoldStartInternal()
+        protected sealed override void OnHoldStartInternal(InteractionDetector interactionDetector)
         {
             if (m_HasBeenCompleted && m_OneTimeUse)
             {
@@ -151,7 +152,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
             m_IsHolding = true;
             m_CurrentProgress = 0f;
             
-            OnHoldBegin();
+            OnHoldBegin(interactionDetector);
             OnHoldStarted?.Invoke();
         }
 
@@ -169,7 +170,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
         }
 
         /// <inheritdoc/>
-        protected sealed override void OnHoldCompleteInternal()
+        protected sealed override void OnHoldCompleteInternal(InteractionDetector interactionDetector)
         {
             if (!m_IsHolding)
             {
@@ -180,7 +181,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
             m_CurrentProgress = 1f;
             m_HasBeenCompleted = true;
 
-            PerformHoldInteraction();
+            PerformHoldInteraction(interactionDetector);
             OnHoldCompleted?.Invoke();
         }
 
@@ -200,7 +201,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
         /// <summary>
         /// Not used for hold interactions - use OnHoldCompleteInternal instead.
         /// </summary>
-        protected override void OnInteractInternal()
+        protected override void OnInteractInternal(InteractionDetector interactionDetector)
         {
             // Hold interactions don't use instant interact
             Debug.LogWarning($"[{GetType().Name}] Hold interaction triggered via OnInteract. Use hold methods instead.", this);
@@ -213,12 +214,13 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
         /// <summary>
         /// Called when the hold interaction begins. Override for custom behavior.
         /// </summary>
-        protected virtual void OnHoldBegin() { }
+        protected virtual void OnHoldBegin(InteractionDetector interactor) { }
 
         /// <summary>
         /// Called each frame during hold with current progress. Override for custom behavior.
         /// </summary>
         /// <param name="progress">Normalized progress from 0 to 1.</param>
+        /// <param name="interactor">Gets InteractionDetector class</param>
         protected virtual void OnHoldUpdate(float progress) { }
 
         /// <summary>
@@ -230,7 +232,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
         /// Override this method to implement the specific hold interaction behavior.
         /// Called when the hold duration is completed.
         /// </summary>
-        protected abstract void PerformHoldInteraction();
+        protected abstract void PerformHoldInteraction(InteractionDetector interactor);
 
         #endregion
     }

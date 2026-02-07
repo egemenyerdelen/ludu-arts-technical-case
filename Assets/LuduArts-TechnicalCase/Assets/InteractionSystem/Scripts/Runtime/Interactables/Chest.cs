@@ -183,18 +183,16 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         /// <summary>
         /// Collects all contents from the chest.
         /// </summary>
-        public void CollectContents()
+        public void CollectContents(PlayerInventory playerInventory)
         {
             if (m_ContentsCollected || m_Contents.Count == 0)
             {
                 return;
             }
 
-            var inventory = FindPlayerInventory();
-
             foreach (var content in m_Contents)
             {
-                CollectContent(content, inventory);
+                CollectContent(content, playerInventory);
             }
 
             m_ContentsCollected = true;
@@ -209,7 +207,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         #region Protected Override Methods
 
         /// <inheritdoc/>
-        protected override void OnHoldBegin()
+        protected override void OnHoldBegin(InteractionDetector interactionDetector)
         {
             PlaySound(m_OpeningSound);
             OnChestOpening?.Invoke();
@@ -234,7 +232,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         }
 
         /// <inheritdoc/>
-        protected override void PerformHoldInteraction()
+        protected override void PerformHoldInteraction(InteractionDetector interactionDetector)
         {
             m_IsOpened = true;
             m_CurrentOpenProgress = 1f;
@@ -251,7 +249,8 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
 
             if (m_GiveContentsOnOpen)
             {
-                CollectContents();
+                var playerInventory = interactionDetector.GetComponent<PlayerInventory>();
+                CollectContents(playerInventory);
             }
 
             OnChestOpened?.Invoke();
@@ -265,12 +264,13 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         }
 
         /// <inheritdoc/>
-        protected override void OnInteractInternal()
+        protected override void OnInteractInternal(InteractionDetector interactionDetector)
         {
             // If chest is already open but contents not collected, collect them
             if (m_IsOpened && !m_ContentsCollected)
             {
-                CollectContents();
+                var playerInventory = interactionDetector.GetComponent<PlayerInventory>();
+                CollectContents(playerInventory);
             }
         }
 

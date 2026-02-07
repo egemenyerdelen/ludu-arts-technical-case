@@ -2,6 +2,7 @@ using System;
 using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Base;
 using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Enums;
 using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Interfaces;
+using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player;
 using UnityEngine;
 
 namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Interactables
@@ -258,16 +259,22 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         #region Protected Override Methods
 
         /// <inheritdoc/>
-        protected override void OnInteractInternal()
+        protected override void OnInteractInternal(InteractionDetector interactionDetector)
         {
+            var playerInventory = interactionDetector.GetComponent<PlayerInventory>();
             if (m_IsLocked)
             {
-                PlaySound(m_LockedSound);
-                Debug.Log($"[Door] Door is locked. Requires {m_RequiredKeyType} key.", this);
-                return;
+                if (!playerInventory.HasKey(m_RequiredKeyType))
+                {
+                    PlaySound(m_LockedSound);
+                    Debug.Log($"[Door] Door is locked. Requires {m_RequiredKeyType} key.", this);
+                    return;
+                }
+                
+                playerInventory.TryUnlockWithKey(this);
             }
 
-            base.OnInteractInternal();
+            base.OnInteractInternal(interactionDetector);
         }
 
         /// <inheritdoc/>
@@ -382,12 +389,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
 
         private string GetLockedPrompt()
         {
-            if (m_RequiredKeyType == KeyType.None)
-            {
-                return "Locked";
-            }
-
-            return $"Locked - Requires {m_RequiredKeyType} Key";
+            return m_RequiredKeyType == KeyType.None ? "Locked" : $"Locked - Requires {m_RequiredKeyType} Key";
         }
 
         private void PlaySound(AudioClip clip)

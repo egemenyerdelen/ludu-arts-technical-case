@@ -2,6 +2,7 @@ using System;
 using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Data;
 using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Enums;
 using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Interfaces;
+using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player;
 using UnityEngine;
 
 namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Base
@@ -10,6 +11,8 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
     /// Abstract base class for all interactable objects.
     /// Provides common functionality and enforces the IInteractable contract.
     /// </summary>
+    
+    [RequireComponent(typeof(InteractableHighlight))]
     public abstract class InteractableBase : MonoBehaviour, IInteractable
     {
         #region Fields
@@ -21,15 +24,12 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
         [Header("Interaction Settings")]
         [SerializeField] private string m_InteractionPrompt = "Interact";
         [SerializeField] private bool m_IsInteractable = true;
-
-        [Header("Visual Feedback")]
-        [SerializeField] private bool m_UseHighlight = true;
-        [SerializeField] private Material m_HighlightMaterial;
+        
+        [Header("References")]
+        [SerializeField] private InteractableHighlight m_Highlight;
 
         // Non-serialized private instance fields
         private bool m_IsFocused;
-        private Renderer[] m_Renderers;
-        private Material[] m_OriginalMaterials;
 
         #endregion
 
@@ -74,11 +74,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
         /// <summary>
         /// Gets or sets whether highlighting is enabled for this object.
         /// </summary>
-        protected bool UseHighlight
-        {
-            get => m_UseHighlight;
-            set => m_UseHighlight = value;
-        }
 
         #endregion
 
@@ -86,7 +81,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
 
         protected virtual void Awake()
         {
-            CacheRenderers();
+            
         }
 
         protected virtual void OnEnable()
@@ -100,13 +95,18 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
             // Clean up highlight if disabled while focused
             if (m_IsFocused)
             {
-                RemoveHighlight();
+                m_Highlight.RemoveHighlight();
                 m_IsFocused = false;
             }
         }
 
         protected virtual void OnValidate()
         {
+            if (m_Highlight == null)
+            {
+                m_Highlight = GetComponent<InteractableHighlight>();
+            }
+            
             // Ensure prompt is not empty
             if (string.IsNullOrEmpty(m_InteractionPrompt))
             {
@@ -166,64 +166,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
                 transform.position
             );
         }
-
-        private void CacheRenderers()
-        {
-            m_Renderers = GetComponentsInChildren<Renderer>();
-            
-            if (m_Renderers == null || m_Renderers.Length == 0)
-            {
-                Debug.LogWarning($"[{GetType().Name}] No renderers found for highlight system.", this);
-                return;
-            }
-
-            m_OriginalMaterials = new Material[m_Renderers.Length];
-            for (var i = 0; i < m_Renderers.Length; i++)
-            {
-                if (m_Renderers[i] != null)
-                {
-                    m_OriginalMaterials[i] = m_Renderers[i].material;
-                }
-            }
-        }
-
-        private void ApplyHighlight()
-        {
-            if (!m_UseHighlight || m_HighlightMaterial == null || m_Renderers == null)
-            {
-                return;
-            }
-
-            for (var i = 0; i < m_Renderers.Length; i++)
-            {
-                if (m_Renderers[i] != null)
-                {
-                    // Add highlight material as additional material
-                    var materials = m_Renderers[i].materials;
-                    var newMaterials = new Material[materials.Length + 1];
-                    materials.CopyTo(newMaterials, 0);
-                    newMaterials[materials.Length] = m_HighlightMaterial;
-                    m_Renderers[i].materials = newMaterials;
-                }
-            }
-        }
-
-        private void RemoveHighlight()
-        {
-            if (!m_UseHighlight || m_Renderers == null || m_OriginalMaterials == null)
-            {
-                return;
-            }
-
-            for (var i = 0; i < m_Renderers.Length; i++)
-            {
-                if (m_Renderers[i] != null && m_OriginalMaterials[i] != null)
-                {
-                    m_Renderers[i].material = m_OriginalMaterials[i];
-                }
-            }
-        }
-
         #endregion
 
         #region Interface Implementations
@@ -237,7 +179,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
             }
 
             m_IsFocused = true;
-            ApplyHighlight();
+            m_Highlight.ApplyHighlight();
             OnFocusEnterInternal();
             OnFocusEntered?.Invoke();
         }
@@ -251,13 +193,13 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
             }
 
             m_IsFocused = false;
-            RemoveHighlight();
+            m_Highlight.RemoveHighlight();
             OnFocusExitInternal();
             OnFocusExited?.Invoke();
         }
 
         /// <inheritdoc/>
-        void IInteractable.OnInteract()
+        void IInteractable.OnInteract(InteractionDetector interactionDetector)
         {
             if (!CanInteract)
             {
@@ -265,18 +207,18 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
                 return;
             }
 
-            OnInteractInternal();
+            OnInteractInternal(interactionDetector);
         }
 
         /// <inheritdoc/>
-        void IInteractable.OnHoldStart()
+        void IInteractable.OnHoldStart(InteractionDetector interactionDetector)
         {
             if (!CanInteract)
             {
                 return;
             }
 
-            OnHoldStartInternal();
+            OnHoldStartInternal(interactionDetector);
         }
 
         /// <inheritdoc/>
@@ -286,18 +228,13 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
         }
 
         /// <inheritdoc/>
-        void IInteractable.OnHoldComplete()
+        void IInteractable.OnHoldComplete(InteractionDetector interactionDetector)
         {
-            if (!CanInteract)
-            {
-                return;
-            }
-
-            OnHoldCompleteInternal();
+            OnHoldCompleteInternal(interactionDetector);
         }
 
         /// <inheritdoc/>
-        void IInteractable.OnHoldCancel()
+        void IInteractable.OnHoldCancel(InteractionDetector interactionDetector)
         {
             OnHoldCancelInternal();
         }
@@ -319,12 +256,12 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
         /// <summary>
         /// Called when the object is interacted with. Override for custom behavior.
         /// </summary>
-        protected virtual void OnInteractInternal() { }
+        protected virtual void OnInteractInternal(InteractionDetector interactionDetector) { }
 
         /// <summary>
         /// Called when hold interaction starts. Override for custom behavior.
         /// </summary>
-        protected virtual void OnHoldStartInternal() { }
+        protected virtual void OnHoldStartInternal(InteractionDetector interactionDetector) { }
 
         /// <summary>
         /// Called during hold interaction with progress. Override for custom behavior.
@@ -335,7 +272,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
         /// <summary>
         /// Called when hold interaction completes. Override for custom behavior.
         /// </summary>
-        protected virtual void OnHoldCompleteInternal() { }
+        protected virtual void OnHoldCompleteInternal(InteractionDetector interactionDetector) { }
 
         /// <summary>
         /// Called when hold interaction is cancelled. Override for custom behavior.

@@ -181,10 +181,8 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
 
         private void ApplyKeyColor()
         {
-            if (m_KeyRenderer == null)
-            {
+            if (m_KeyRenderer == null) 
                 return;
-            }
 
             var keyColor = GetKeyColor();
 

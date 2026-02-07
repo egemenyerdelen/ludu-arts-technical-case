@@ -169,7 +169,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
                 return;
             }
 
-            PerformInteraction();
+            PerformInteraction(this);
         }
 
         /// <summary>
@@ -220,24 +220,17 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
                 return;
             }
 
-            // Try auto-unlock if target is a locked interactable and player has the key
-            if (!m_CurrentTarget.CanInteract)
-            {
-                TryAutoUnlock();
-                return;
-            }
-
             switch (m_CurrentTarget.InteractionType)
             {
                 case InteractionType.Instant:
                 case InteractionType.Toggle:
-                    PerformInteraction();
+                    PerformInteraction(this);
                     break;
 
                 case InteractionType.Hold:
                     if (!m_IsHolding)
                     {
-                        StartHold();
+                        StartHold(this);
                     }
                     break;
             }
@@ -383,13 +376,13 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
             OnTargetChanged?.Invoke(m_CurrentTarget);
         }
 
-        private void StartHold()
+        private void StartHold(InteractionDetector interactionDetector)
         {
             m_IsHolding = true;
             m_HoldStartTime = Time.time;
             m_CurrentHoldProgress = 0f;
 
-            m_CurrentTarget.OnHoldStart();
+            m_CurrentTarget.OnHoldStart(interactionDetector);
             UpdateUI();
         }
 
@@ -441,7 +434,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
             m_IsHolding = false;
             m_CurrentHoldProgress = 0f;
 
-            m_CurrentTarget.OnHoldComplete();
+            m_CurrentTarget.OnHoldComplete(this);
             OnInteractionPerformed?.Invoke(m_CurrentTarget);
 
             UpdateUI();
@@ -459,13 +452,13 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
 
             if (m_CurrentTarget != null)
             {
-                m_CurrentTarget.OnHoldCancel();
+                m_CurrentTarget.OnHoldCancel(this);
             }
 
             UpdateUI();
         }
 
-        private void PerformInteraction()
+        private void PerformInteraction(InteractionDetector interactionDetector)
         {
             if (m_CurrentTarget == null)
             {
@@ -473,34 +466,11 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
                 return;
             }
 
-            m_CurrentTarget.OnInteract();
+            m_CurrentTarget.OnInteract(interactionDetector);
             OnInteractionPerformed?.Invoke(m_CurrentTarget);
 
             // Refresh UI in case prompt changed
             UpdateUI();
-        }
-
-        private void TryAutoUnlock()
-        {
-            if (m_PlayerInventory == null || m_CurrentTargetObject == null)
-            {
-                return;
-            }
-
-            var lockable = m_CurrentTargetObject.GetComponent<ILockable>();
-
-            if (lockable == null || !lockable.IsLocked)
-            {
-                return;
-            }
-
-            var unlocked = m_PlayerInventory.TryUnlockWithKey(lockable);
-
-            if (unlocked)
-            {
-                Debug.Log($"[InteractionDetector] Auto-unlocked {m_CurrentTargetObject.name} with {lockable.RequiredKeyType} key.", this);
-                UpdateUI();
-            }
         }
 
         private void UpdateUI()

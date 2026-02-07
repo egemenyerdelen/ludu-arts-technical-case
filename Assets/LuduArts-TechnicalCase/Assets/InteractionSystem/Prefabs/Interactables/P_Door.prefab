@@ -123,6 +123,7 @@ GameObject:
   - component: {fileID: 2768736727464763604}
   - component: {fileID: 7467575447197011001}
   - component: {fileID: 890128439151220789}
+  - component: {fileID: 4328930201443501575}
   m_Layer: 0
   m_Name: P_Door
   m_TagString: Untagged
@@ -260,17 +261,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Interactables.Door
   m_InteractionPrompt: Interact
   m_IsInteractable: 1
-  m_UseHighlight: 0
-  m_HighlightMaterial: {fileID: 0}
+  m_Highlight: {fileID: 4328930201443501575}
   m_StartOn: 0
   m_OnPrompt: Close
   m_OffPrompt: Open the Door
-  m_InitialState: 0
-  m_OpenAngle: 90
+  m_InitialState: 2
+  m_OpenAngle: -90
   m_AnimationDuration: 1
   m_PivotPoint: {fileID: 2768736727464763604}
-  m_IsLocked: 1
-  m_RequiredKeyType: 2
+  m_IsLocked: 0
+  m_RequiredKeyType: 1
   m_ConsumeKeyOnUnlock: 1
   m_Animator: {fileID: 0}
   m_UseAnimator: 0
@@ -279,6 +279,20 @@ MonoBehaviour:
   m_LockedSound: {fileID: 0}
   m_UnlockSound: {fileID: 0}
   m_UniqueId: Door_P_Door_-88488
+--- !u!114 &4328930201443501575
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3196307564862658241}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64f815c01a754f7698c9a8e5ddba6525, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Base.InteractableHighlight
+  m_UseHighlight: 0
+  m_HighlightMaterial: {fileID: 0}
 --- !u!1 &3963112280536945424
 GameObject:
   m_ObjectHideFlags: 0

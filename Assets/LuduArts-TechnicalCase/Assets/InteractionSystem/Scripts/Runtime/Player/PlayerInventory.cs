@@ -16,7 +16,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
 
         // Serialized private instance fields
         [Header("Settings")]
-        [SerializeField] private bool m_AutoTryUnlock = true;
 
         [Header("Save System")]
         [SerializeField] private string m_UniqueId = "PlayerInventory";
@@ -53,8 +52,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
         #endregion
 
         #region Properties
-
-        /// <inheritdoc/>
         public string UniqueId => m_UniqueId;
 
         /// <summary>
@@ -66,11 +63,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
         /// Gets all items in the inventory.
         /// </summary>
         public IReadOnlyList<InventoryItem> Items => m_Items;
-
-        /// <summary>
-        /// Gets whether auto-unlock is enabled.
-        /// </summary>
-        public bool AutoTryUnlock => m_AutoTryUnlock;
 
         #endregion
 

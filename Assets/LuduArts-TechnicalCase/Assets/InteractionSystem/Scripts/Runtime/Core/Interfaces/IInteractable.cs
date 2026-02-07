@@ -1,4 +1,5 @@
 using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Enums;
+using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player;
 
 namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Interfaces
 {
@@ -52,13 +53,13 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.I
         /// Called when the player performs an instant or toggle interaction.
         /// For Hold interactions, use OnHoldComplete instead.
         /// </summary>
-        void OnInteract();
+        void OnInteract(InteractionDetector interactionDetector);
 
         /// <summary>
         /// Called when the player begins holding the interaction input.
         /// Only called for InteractionType.Hold objects.
         /// </summary>
-        void OnHoldStart();
+        void OnHoldStart(InteractionDetector interactionDetector);
 
         /// <summary>
         /// Called every frame while holding, with normalized progress (0-1).
@@ -71,13 +72,13 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.I
         /// Called when the hold interaction is successfully completed.
         /// Only called for InteractionType.Hold objects.
         /// </summary>
-        void OnHoldComplete();
+        void OnHoldComplete(InteractionDetector interactionDetector);
 
         /// <summary>
         /// Called when the hold interaction is cancelled before completion.
         /// Only called for InteractionType.Hold objects.
         /// </summary>
-        void OnHoldCancel();
+        void OnHoldCancel(InteractionDetector interactionDetector);
 
         #endregion
     }

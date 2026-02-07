@@ -5,72 +5,84 @@
 
 ## Özet
 
-| Bilgi | Değer                              |
-|-------|------------------------------------|
-| Toplam prompt sayısı | X                                  |
-| Kullanılan araçlar | ChatGPT / Claude / Claude Code     |
-| En çok yardım alınan konular | Sistem Mimarisi / kod refaktörleri |
-| Tahmini LLM ile kazanılan süre | 3-4 saat                           |
+| Bilgi | Değer |
+|-------|-------|
+| Toplam prompt sayısı | X |
+| Kullanılan araçlar | ChatGPT / Claude / Copilot |
+| En çok yardım alınan konular | [liste] |
+| Tahmini LLM ile kazanılan süre | X saat |
 
 ---
 
-## Prompt 1: Unity interaction system development for Ludu Arts
+## Prompt 1: Refactoring LuduArts Interaction System
 
-**Araç:** [Claude Opus 4.5]
-**Tarih/Saat:** 2026-02-02 15:15
+**Araç:** [Claude Sonnet 4.5 Extended]
+**Tarih/Saat:** [2026-02-07 22:30]
 
 **Prompt:**
 ```
-Hey friend! I just started a new technical case for Ludu Arts, which is a game company in Turkey.
+Hey Claude! Hope u are okay!
 
-I have a general case file (main file name: CASE_Unity_Interaction_System.md), can u check it for me? I will also send you all files they send me.
+Today, I need help about refactoring one of my technical cases; LuduArts' Interaction System.
 
-After your observation, please provide me a fully detailed and structured plan for this whole case. You can freely plan any detail of this project and we can discuss or change later.
+We've create and improve this project with one of your instances but it didn't go well as I think.
 
-Unity architecture and development plan also is your mission.
+So, with the unity skills that we recently created, I will ask steps when I need help and want you to show me the way or fix/create a class if needed.
 
-I need to tell, there is some extra points in the case file. I WANT THEM ALL! Feel free to give me challenging path :)
-
-If u are ready, LET'S ROLL MY FELLOW FRIEND!
+We can start if u ready!
 ```
 
 **Alınan Cevap (Özet):**
 ```
-Yapay zeka'nın cevabı tüm sistemi tasarlamak oldu.
+Hey Egemen! I'm doing great, thanks! 😊
+.
+.
+I like your approach of going step-by-step. This way we can tackle each issue methodically and make sure the refactoring goes smoothly this time around.
+Whenever you're ready, just share:
+
+What specific part of the interaction system you want to start with
+What issues you're facing or what didn't work well from the previous attempt
+Any relevant code snippets or classes that need attention
+
+Let's make this interaction system solid! 🎮
 ```
 
 **Nasıl Kullandım:**
-- [ ] Direkt kullandım (değişiklik yapmadan)
-- [x] Adapte ettim (değişiklikler yaparak)
+- [x] Direkt kullandım (değişiklik yapmadan)
+- [ ] Adapte ettim (değişiklikler yaparak)
 - [ ] Reddettim (kullanmadım)
 
 **Açıklama:**
-> Sisteme nasıl başlamak istediğimi düşünürken önümü görebilmek istedim. 
-
-**Yapılan Değişiklikler (adapte ettiyseniz):**
-> Bana verdiği bütün yol haritasını ve scriptleri eleyerek parça parça içeriye aldım ve üzerlerine devam ettim.
+> Bu projeyi refactor etmeye başlarken bir rehber + yardımcı ile başlamak istedim ve 
+> işin en başından onu da dahil etmek istedim
 
 ---
 
-## Prompt 2: Unity interaction system development for Ludu Arts
+## Prompt 2: [Check interactable class modifications]
 
-**Araç:** [Claude Opus 4.5]
-**Tarih/Saat:** 2026-02-03 01:38
+**Araç:** [Claude Sonnet 4.5 Extended]
+**Tarih/Saat:** 2026-02-08 00:08
 
 **Prompt:**
 ```
-Can u help me step by step to setup UI part of this project?
+[4 .cs file uploaded]
+
+I am trying to change some core features about interactable classes.
+
+In old system, interactables don't have any idea about who is interactor; but now, they know who is interacting (if the implementation is correct :)) 
+
+I cannot be sure about those classes are correct and system is working perfect. So, maybe u wanna check and show me what could possibly go wrong and what could be improve.
+
+Take your time, I will be waiting for you analysis!
 ```
 
 **Alınan Cevap (Özet):**
 ```
-Absolutely! Let's set up the UI step by step. I'll create a detailed guide and some helper scripts to make this easier.
-
-Ve böylece bana UI'ı direkt veren bir editör scripti yazdı.
+[Cevap özeti]
 ```
 
 **Nasıl Kullandım:**
-- [x] Direkt kullandım
+- [ ] Direkt kullandım
 - [ ] Adapte ettim
 - [ ] Reddettim
 
@@ -79,53 +91,27 @@ Ve böylece bana UI'ı direkt veren bir editör scripti yazdı.
 
 ---
 
-## Prompt 3: Finishing a technic case
+## Prompt 3: ...
 
-**Araç:** [Claude Sonnet 4.5]
-**Tarih/Saat:** 2026-02-02 18:23
-
-**Prompt:**
-```
-Hello Claude!
-
-I am trying to finish a new technic case today. Can u help me in this?
-```
-
-**Alınan Cevap (Özet):**
-```
-Hello! I'd be happy to help you with your technic case!
-To give you the best assistance, could you tell me a bit more about what you're working on? For example:
-
-What kind of technic case is it? (Is it a technical project, a case study, a LEGO Technic build, or something else?)
-What stage are you at currently?
-What specific aspects do you need help with?
-```
-
-**Nasıl Kullandım:**
-- [ ] Direkt kullandım
-- [x] Adapte ettim
-- [ ] Reddettim
-
-**Açıklama:**
-> [Açıklama]
+[Diğer promptlar için aynı formatı kullanın]
 
 ---
 
 ## Genel Değerlendirme
 
 ### LLM'in En Çok Yardımcı Olduğu Alanlar
-1. Sistem mimarisi
-2. Kod refaktörleri
-3. Daha optimize teknik araştırma
+1. [Alan 1]
+2. [Alan 2]
+3. [Alan 3]
 
 ### LLM'in Yetersiz Kaldığı Alanlar
-1. Uzun işlemler yaptırdığım zaman içerisinde değişiklikler yapamıyorum. Bu nedenle küçük değişiklikler için küçük LLM'lere geçiyorum
-2. Unity'i hala benim gözümden göremiyor diyebilirim sanırım
+1. [Alan 1 - neden yetersiz kaldığı]
+2. [Alan 2]
 
 ### LLM Kullanımı Hakkında Düşüncelerim
-> Sistem mimarisi oluşturmanın çok daha detaylı olduğunu
-> En az 4 5 saat uzardı
-> Agentlara ağırlık vererek, onlara roller dağıtarak ve birlikte çalışmalarını sağlayarak.
+> [Bu case boyunca LLM kullanarak neler öğrendiniz?
+> LLM'siz ne kadar sürede bitirebilirdiniz?
+> Gelecekte LLM'i nasıl daha etkili kullanabilirsiniz?]
 
 ---
 

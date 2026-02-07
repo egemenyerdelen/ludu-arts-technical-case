@@ -1,6 +1,7 @@
 using System;
 using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Enums;
 using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Interfaces;
+using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player;
 using UnityEngine;
 
 namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Base
@@ -105,7 +106,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
         }
 
         /// <inheritdoc/>
-        protected override void OnInteractInternal()
+        protected override void OnInteractInternal(InteractionDetector interactionDetector)
         {
             Toggle();
         }
@@ -135,7 +136,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
         /// <summary>
         /// Not used for toggle interactions.
         /// </summary>
-        protected sealed override void OnHoldStartInternal() { }
+        protected sealed override void OnHoldStartInternal(InteractionDetector interactionDetector) { }
 
         /// <summary>
         /// Not used for toggle interactions.
@@ -145,7 +146,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
         /// <summary>
         /// Not used for toggle interactions.
         /// </summary>
-        protected sealed override void OnHoldCompleteInternal() { }
+        protected sealed override void OnHoldCompleteInternal(InteractionDetector interactionDetector) { }
 
         /// <summary>
         /// Not used for toggle interactions.
