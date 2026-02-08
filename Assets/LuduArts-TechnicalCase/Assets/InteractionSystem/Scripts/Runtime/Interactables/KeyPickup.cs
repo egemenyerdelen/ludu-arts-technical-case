@@ -242,14 +242,14 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
             }
         }
 
-        private PlayerInventory FindPlayerInventory()
+        private PlayerKeyInventory FindPlayerInventory()
         {
             // Try to find via tag first
             var player = GameObject.FindGameObjectWithTag("Player");
             
             if (player != null)
             {
-                var inventory = player.GetComponent<PlayerInventory>();
+                var inventory = player.GetComponent<PlayerKeyInventory>();
                 if (inventory != null)
                 {
                     return inventory;
@@ -257,7 +257,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
             }
 
             // Fallback to FindObjectOfType
-            return FindAnyObjectByType<PlayerInventory>();
+            return FindAnyObjectByType<PlayerKeyInventory>();
         }
 
         #endregion

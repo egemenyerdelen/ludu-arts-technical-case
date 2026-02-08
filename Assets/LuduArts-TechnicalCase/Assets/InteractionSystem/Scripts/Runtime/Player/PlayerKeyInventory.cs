@@ -10,7 +10,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
     /// <summary>
     /// Simple inventory system for storing keys and checking requirements.
     /// </summary>
-    public class PlayerInventory : MonoBehaviour
+    public class PlayerKeyInventory : MonoBehaviour
     {
         #region Fields
 

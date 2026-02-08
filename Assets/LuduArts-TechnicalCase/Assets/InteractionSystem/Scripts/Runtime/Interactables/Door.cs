@@ -261,7 +261,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         /// <inheritdoc/>
         protected override void OnInteractInternal(InteractionDetector interactionDetector)
         {
-            var playerInventory = interactionDetector.GetComponent<PlayerInventory>();
+            var playerInventory = interactionDetector.GetComponent<PlayerKeyInventory>();
             if (m_IsLocked)
             {
                 if (!playerInventory.HasKey(m_RequiredKeyType))
@@ -312,8 +312,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
 
         private void InitializeRotations()
         {
-            var pivot = m_PivotPoint != null ? m_PivotPoint : transform;
-            m_ClosedRotation = pivot.localRotation;
+            m_ClosedRotation = transform.localRotation;
             m_OpenRotation = m_ClosedRotation * Quaternion.Euler(0f, m_OpenAngle, 0f);
         }
 
@@ -353,9 +352,8 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         private System.Collections.IEnumerator AnimateRotation(bool isOn)
         {
             m_IsAnimating = true;
-
-            var pivot = m_PivotPoint != null ? m_PivotPoint : transform;
-            var startRotation = pivot.localRotation;
+            
+            var startRotation = gameObject.transform.localRotation;
             var targetRotation = isOn ? m_OpenRotation : m_ClosedRotation;
 
             var elapsed = 0f;
@@ -364,11 +362,19 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
             {
                 elapsed += Time.deltaTime;
                 var t = Mathf.SmoothStep(0f, 1f, elapsed / m_AnimationDuration);
-                pivot.localRotation = Quaternion.Slerp(startRotation, targetRotation, t);
+                transform.localRotation = Quaternion.Slerp(startRotation, targetRotation, t);
                 yield return null;
             }
 
-            pivot.localRotation = targetRotation;
+            if (transform.localRotation != targetRotation)
+            {
+                transform.RotateAround(m_PivotPoint.position, Vector3.up, m_OpenAngle);
+            }
+            else
+            {
+                transform.RotateAround(m_PivotPoint.position, Vector3.up, -m_OpenAngle);
+            }
+            
             m_IsAnimating = false;
             m_AnimationCoroutine = null;
         }

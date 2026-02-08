@@ -36,7 +36,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
 
         // Non-serialized private instance fields
         private Core.Managers.InputManager m_InputManager;
-        private PlayerInventory m_PlayerInventory;
+        private PlayerKeyInventory m_PlayerKeyInventory;
         private IInteractable m_CurrentTarget;
         private GameObject m_CurrentTargetObject;
         private bool m_IsHolding;
@@ -269,14 +269,14 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
 
         private void InitializePlayerInventory()
         {
-            m_PlayerInventory = GetComponent<PlayerInventory>();
+            m_PlayerKeyInventory = GetComponent<PlayerKeyInventory>();
 
-            if (m_PlayerInventory == null)
+            if (m_PlayerKeyInventory == null)
             {
-                m_PlayerInventory = GetComponentInParent<PlayerInventory>();
+                m_PlayerKeyInventory = GetComponentInParent<PlayerKeyInventory>();
             }
 
-            if (m_PlayerInventory == null)
+            if (m_PlayerKeyInventory == null)
             {
                 Debug.LogWarning("[InteractionDetector] No PlayerInventory found on player. Auto-unlock will be disabled.", this);
             }

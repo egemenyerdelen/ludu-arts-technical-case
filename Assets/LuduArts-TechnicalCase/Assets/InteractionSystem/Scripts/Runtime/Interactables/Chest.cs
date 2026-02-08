@@ -183,7 +183,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         /// <summary>
         /// Collects all contents from the chest.
         /// </summary>
-        public void CollectContents(PlayerInventory playerInventory)
+        public void CollectContents(PlayerKeyInventory playerKeyInventory)
         {
             if (m_ContentsCollected || m_Contents.Count == 0)
             {
@@ -192,7 +192,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
 
             foreach (var content in m_Contents)
             {
-                CollectContent(content, playerInventory);
+                CollectContent(content, playerKeyInventory);
             }
 
             m_ContentsCollected = true;
@@ -249,7 +249,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
 
             if (m_GiveContentsOnOpen)
             {
-                var playerInventory = interactionDetector.GetComponent<PlayerInventory>();
+                var playerInventory = interactionDetector.GetComponent<PlayerKeyInventory>();
                 CollectContents(playerInventory);
             }
 
@@ -269,7 +269,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
             // If chest is already open but contents not collected, collect them
             if (m_IsOpened && !m_ContentsCollected)
             {
-                var playerInventory = interactionDetector.GetComponent<PlayerInventory>();
+                var playerInventory = interactionDetector.GetComponent<PlayerKeyInventory>();
                 CollectContents(playerInventory);
             }
         }
@@ -347,18 +347,18 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
             }
         }
 
-        private void CollectContent(ChestContent content, PlayerInventory inventory)
+        private void CollectContent(ChestContent content, PlayerKeyInventory keyInventory)
         {
             switch (content.ContentType)
             {
                 case ChestContentType.Key:
-                    if (inventory != null && content.KeyItem != null)
+                    if (keyInventory != null && content.KeyItem != null)
                     {
-                        inventory.AddKey(content.KeyItem.KeyType, content.KeyItem);
+                        keyInventory.AddKey(content.KeyItem.KeyType, content.KeyItem);
                     }
                     else
                     {
-                        Debug.LogWarning($"[Chest] Cannot collect key content: inventory={inventory != null}, keyItem={content.KeyItem != null}", this);
+                        Debug.LogWarning($"[Chest] Cannot collect key content: inventory={keyInventory != null}, keyItem={content.KeyItem != null}", this);
                     }
                     break;
 
@@ -380,16 +380,16 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
             }
         }
 
-        private PlayerInventory FindPlayerInventory()
+        private PlayerKeyInventory FindPlayerInventory()
         {
             var player = GameObject.FindGameObjectWithTag("Player");
 
             if (player != null)
             {
-                return player.GetComponent<PlayerInventory>();
+                return player.GetComponent<PlayerKeyInventory>();
             }
 
-            return FindAnyObjectByType<PlayerInventory>();
+            return FindAnyObjectByType<PlayerKeyInventory>();
         }
 
         private void PlaySound(AudioClip clip)

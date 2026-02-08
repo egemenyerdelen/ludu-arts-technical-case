@@ -18,7 +18,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.UI
 
         // Serialized private instance fields
         [Header("References")]
-        [SerializeField] private PlayerInventory m_PlayerInventory;
+        [SerializeField] private PlayerKeyInventory m_PlayerKeyInventory;
         [SerializeField] private Transform m_KeyContainer;
         [SerializeField] private Transform m_ItemContainer;
         [SerializeField] private GameObject m_KeySlotPrefab;
@@ -70,7 +70,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.UI
         /// </summary>
         public void RefreshDisplay()
         {
-            if (m_PlayerInventory == null)
+            if (m_PlayerKeyInventory == null)
             {
                 Debug.LogWarning("[InventoryUI] Cannot refresh - no PlayerInventory assigned.", this);
                 return;
@@ -82,21 +82,21 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.UI
         /// <summary>
         /// Sets the player inventory reference.
         /// </summary>
-        /// <param name="inventory">The player inventory to display.</param>
-        public void SetInventory(PlayerInventory inventory)
+        /// <param name="keyInventory">The player inventory to display.</param>
+        public void SetInventory(PlayerKeyInventory keyInventory)
         {
-            if (inventory == null)
+            if (keyInventory == null)
             {
                 Debug.LogError("[InventoryUI] Cannot set null inventory.", this);
                 return;
             }
 
-            if (m_PlayerInventory != null)
+            if (m_PlayerKeyInventory != null)
             {
                 UnsubscribeFromEvents();
             }
 
-            m_PlayerInventory = inventory;
+            m_PlayerKeyInventory = keyInventory;
             SubscribeToEvents();
             RefreshDisplay();
         }
@@ -112,11 +112,11 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.UI
                 return;
             }
 
-            if (m_PlayerInventory == null)
+            if (m_PlayerKeyInventory == null)
             {
-                m_PlayerInventory = FindAnyObjectByType<PlayerInventory>();
+                m_PlayerKeyInventory = FindAnyObjectByType<PlayerKeyInventory>();
 
-                if (m_PlayerInventory == null)
+                if (m_PlayerKeyInventory == null)
                 {
                     Debug.LogWarning("[InventoryUI] No PlayerInventory found.", this);
                 }
@@ -132,26 +132,26 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.UI
 
         private void SubscribeToEvents()
         {
-            if (m_PlayerInventory == null)
+            if (m_PlayerKeyInventory == null)
             {
                 return;
             }
 
-            m_PlayerInventory.OnKeyAdded += HandleKeyAdded;
-            m_PlayerInventory.OnKeyRemoved += HandleKeyRemoved;
-            m_PlayerInventory.OnInventoryChanged += HandleInventoryChanged;
+            m_PlayerKeyInventory.OnKeyAdded += HandleKeyAdded;
+            m_PlayerKeyInventory.OnKeyRemoved += HandleKeyRemoved;
+            m_PlayerKeyInventory.OnInventoryChanged += HandleKeyInventoryChanged;
         }
 
         private void UnsubscribeFromEvents()
         {
-            if (m_PlayerInventory == null)
+            if (m_PlayerKeyInventory == null)
             {
                 return;
             }
 
-            m_PlayerInventory.OnKeyAdded -= HandleKeyAdded;
-            m_PlayerInventory.OnKeyRemoved -= HandleKeyRemoved;
-            m_PlayerInventory.OnInventoryChanged -= HandleInventoryChanged;
+            m_PlayerKeyInventory.OnKeyAdded -= HandleKeyAdded;
+            m_PlayerKeyInventory.OnKeyRemoved -= HandleKeyRemoved;
+            m_PlayerKeyInventory.OnInventoryChanged -= HandleKeyInventoryChanged;
         }
 
         private void HandleKeyAdded(KeyType keyType, SO_KeyItem keyData)
@@ -175,7 +175,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.UI
             }
         }
 
-        private void HandleInventoryChanged()
+        private void HandleKeyInventoryChanged()
         {
             if (m_AutoRefresh)
             {
@@ -185,14 +185,14 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.UI
 
         private void RefreshKeyDisplay()
         {
-            if (m_KeyContainer == null || m_PlayerInventory == null)
+            if (m_KeyContainer == null || m_PlayerKeyInventory == null)
             {
                 return;
             }
 
             ClearKeySlots();
 
-            var keyTypes = m_PlayerInventory.GetAllKeyTypes();
+            var keyTypes = m_PlayerKeyInventory.GetAllKeyTypes();
             var displayCount = 0;
 
             foreach (var keyType in keyTypes)
@@ -202,7 +202,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.UI
                     break;
                 }
 
-                var count = m_PlayerInventory.GetKeyCount(keyType);
+                var count = m_PlayerKeyInventory.GetKeyCount(keyType);
 
                 if (count <= 0 && !m_ShowEmptySlots)
                 {
@@ -243,7 +243,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.UI
                 slot = slotObj.AddComponent<KeySlotUI>();
             }
 
-            var keyData = m_PlayerInventory.GetKeyData(keyType);
+            var keyData = m_PlayerKeyInventory.GetKeyData(keyType);
             slot.Setup(keyType, count, keyData);
 
             m_KeySlots.Add(slot);
