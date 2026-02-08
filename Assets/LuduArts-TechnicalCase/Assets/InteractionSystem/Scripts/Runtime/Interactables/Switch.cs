@@ -1,76 +1,61 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Base;
 using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.Interfaces;
+using LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player;
 using UnityEngine;
 using UnityEngine.Events;
 
 namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Interactables
 {
     /// <summary>
-    /// Interactive switch/lever that can toggle and trigger connected objects.
-    /// Supports chained interactions via events.
+    /// Interactive switch that can toggle objects and trigger connected actions.
+    /// Supports three behavioral modes: Toggle, Momentary, and OneShot.
+    /// Designed for clean architecture and performance.
     /// </summary>
     [RequireComponent(typeof(AudioSource))]
     public class Switch : ToggleInteractable
     {
         #region Fields
 
-        // Private constant fields
-        private const string k_AnimatorOnParameter = "IsOn";
+        // Animation constants
+        private const float k_LeverAnimationSpeed = 5f;
 
-        // Serialized private instance fields
-        [Header("Switch Settings")]
+        [Header("Switch Behavior")]
         [SerializeField] private SwitchType m_SwitchType = SwitchType.Toggle;
+        [SerializeField] private float m_MomentaryResetDelay = 0.5f;
 
         [Header("Connected Objects")]
-        [SerializeField] private List<GameObject> m_ConnectedObjects = new List<GameObject>();
-        [SerializeField] private bool m_InvertConnectedState;
+        [SerializeField] private List<ConnectedTarget> m_Targets = new List<ConnectedTarget>();
 
-        [Header("Animation")]
-        [SerializeField] private Animator m_Animator;
-        [SerializeField] private bool m_UseAnimator = true;
+        [Header("Visual Animation")]
         [SerializeField] private Transform m_LeverPivot;
-        [SerializeField] private float m_LeverAngle = 45f;
-        [SerializeField] private float m_AnimationSpeed = 5f;
+        [SerializeField] private float m_LeverRotationAngle = 45f;
 
         [Header("Audio")]
         [SerializeField] private AudioClip m_SwitchOnSound;
         [SerializeField] private AudioClip m_SwitchOffSound;
+        [SerializeField] private AudioClip m_DisabledSound;
 
         [Header("Events")]
         [SerializeField] private UnityEvent m_OnSwitchOn;
         [SerializeField] private UnityEvent m_OnSwitchOff;
-        [SerializeField] private UnityEvent<bool> m_OnSwitchStateChanged;
 
-        [Header("Save System")]
-        [SerializeField] private string m_UniqueId;
-
-        // Non-serialized private instance fields
+        // Runtime state
         private AudioSource m_AudioSource;
         private float m_CurrentLeverAngle;
         private float m_TargetLeverAngle;
+        private Coroutine m_MomentaryResetCoroutine;
+        private bool m_IsDisabled;
 
-        #endregion
-
-        #region Events
-
-        /// <summary>
-        /// Event fired when switch is turned on.
-        /// </summary>
-        public event Action OnSwitchedOn;
-
-        /// <summary>
-        /// Event fired when switch is turned off.
-        /// </summary>
-        public event Action OnSwitchedOff;
+        // Cached component references for performance
+        private Dictionary<GameObject, IToggleable> m_ToggleableCache = new Dictionary<GameObject, IToggleable>();
+        private Dictionary<GameObject, Chest> m_ChestCache = new Dictionary<GameObject, Chest>();
 
         #endregion
 
         #region Properties
-
-        /// <inheritdoc/>
-        public string UniqueId => m_UniqueId;
 
         /// <summary>
         /// Gets the type of this switch.
@@ -78,13 +63,33 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         public SwitchType Type => m_SwitchType;
 
         /// <summary>
-        /// Gets the connected objects list.
+        /// Gets whether this switch is currently disabled (OneShot after activation).
         /// </summary>
-        public IReadOnlyList<GameObject> ConnectedObjects => m_ConnectedObjects;
+        public bool IsDisabled => m_IsDisabled;
+
+        /// <inheritdoc/>
+        public override bool CanInteract => base.CanInteract && !m_IsDisabled;
+
+        /// <inheritdoc/>
+        public override string InteractionPrompt
+        {
+            get
+            {
+                if (m_IsDisabled)
+                    return "Already Used";
+
+                return m_SwitchType switch
+                {
+                    SwitchType.Momentary => IsOn ? "Hold" : "Press",
+                    SwitchType.OneShot => "Activate",
+                    _ => base.InteractionPrompt
+                };
+            }
+        }
 
         #endregion
 
-        #region Unity Methods
+        #region Unity Lifecycle
 
         protected override void Awake()
         {
@@ -94,103 +99,136 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
 
             if (m_AudioSource == null)
             {
-                Debug.LogError("[Switch] AudioSource component is missing.", this);
+                Debug.LogError($"[{name}] AudioSource component missing.", this);
             }
 
-            GenerateUniqueIdIfEmpty();
+            CacheTargetReferences();
         }
 
         protected override void Start()
         {
             base.Start();
 
-            // Initialize lever position
-            m_CurrentLeverAngle = IsOn ? m_LeverAngle : -m_LeverAngle;
+            // Initialize lever to match starting state
+            m_CurrentLeverAngle = IsOn ? m_LeverRotationAngle : -m_LeverRotationAngle;
             m_TargetLeverAngle = m_CurrentLeverAngle;
             ApplyLeverRotation();
         }
 
         private void Update()
         {
-            UpdateLeverAnimation();
+            AnimateLever();
         }
 
         protected override void OnValidate()
         {
             base.OnValidate();
+            m_MomentaryResetDelay = Mathf.Max(0.1f, m_MomentaryResetDelay);
+        }
 
-            if (string.IsNullOrEmpty(m_UniqueId))
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+
+            if (m_MomentaryResetCoroutine != null)
             {
-                GenerateUniqueIdIfEmpty();
+                StopCoroutine(m_MomentaryResetCoroutine);
+                m_MomentaryResetCoroutine = null;
             }
-
-            // Clean null entries from connected objects
-            m_ConnectedObjects.RemoveAll(obj => obj == null);
         }
 
         #endregion
 
-        #region Methods
+        #region Public API
 
         /// <summary>
-        /// Adds a connected object that will be triggered when this switch is toggled.
+        /// Resets a OneShot switch to be usable again (useful for debugging).
         /// </summary>
-        /// <param name="target">The object to connect.</param>
-        public void AddConnectedObject(GameObject target)
+        public void ResetOneShot()
         {
-            if (target == null)
+            if (m_SwitchType != SwitchType.OneShot)
             {
-                Debug.LogError("[Switch] Cannot add null connected object.", this);
+                Debug.LogWarning($"[{name}] ResetOneShot called on non-OneShot switch.", this);
                 return;
             }
 
-            if (!m_ConnectedObjects.Contains(target))
-            {
-                m_ConnectedObjects.Add(target);
-            }
-        }
-
-        /// <summary>
-        /// Removes a connected object.
-        /// </summary>
-        /// <param name="target">The object to disconnect.</param>
-        public void RemoveConnectedObject(GameObject target)
-        {
-            m_ConnectedObjects.Remove(target);
+            m_IsDisabled = false;
+            SetState(false);
         }
 
         #endregion
 
-        #region Protected Override Methods
+        #region Interaction Handling
 
-        /// <inheritdoc/>
+        protected override void OnInteractInternal(InteractionDetector interactionDetector)
+        {
+            switch (m_SwitchType)
+            {
+                case SwitchType.Toggle:
+                    base.OnInteractInternal(interactionDetector);
+                    break;
+
+                case SwitchType.Momentary:
+                    HandleMomentary();
+                    break;
+
+                case SwitchType.OneShot:
+                    HandleOneShot();
+                    break;
+            }
+        }
+
+        private void HandleMomentary()
+        {
+            // Cancel any existing reset
+            if (m_MomentaryResetCoroutine != null)
+            {
+                StopCoroutine(m_MomentaryResetCoroutine);
+            }
+
+            // Activate
+            SetState(true);
+
+            // Schedule automatic deactivation
+            m_MomentaryResetCoroutine = StartCoroutine(MomentaryResetRoutine());
+        }
+
+        private void HandleOneShot()
+        {
+            if (m_IsDisabled)
+            {
+                if (m_DisabledSound != null)
+                {
+                    m_AudioSource.PlayOneShot(m_DisabledSound);
+                }
+                return;
+            }
+
+            // Activate once and disable
+            SetState(true);
+            m_IsDisabled = true;
+        }
+
+        private IEnumerator MomentaryResetRoutine()
+        {
+            yield return new WaitForSeconds(m_MomentaryResetDelay);
+            SetState(false);
+            m_MomentaryResetCoroutine = null;
+        }
+
+        #endregion
+
+        #region State Management
+
         protected override void ApplyState(bool isOn, bool animate)
         {
-            // Set target lever angle
-            m_TargetLeverAngle = isOn ? m_LeverAngle : -m_LeverAngle;
+            // Update visual state
+            UpdateVisuals(isOn, animate);
 
-            if (!animate)
-            {
-                m_CurrentLeverAngle = m_TargetLeverAngle;
-                ApplyLeverRotation();
-            }
+            // Execute connected actions
+            ExecuteTargetActions(isOn);
 
-            // Update animator
-            if (m_UseAnimator && m_Animator != null)
-            {
-                m_Animator.SetBool(k_AnimatorOnParameter, isOn);
-            }
-
-            // Play sound
-            if (animate)
-            {
-                PlaySound(isOn ? m_SwitchOnSound : m_SwitchOffSound);
-            }
-
-            // Trigger connected objects
-            TriggerConnectedObjects(isOn);
-
-            // Fire Unity events
+            // Fire events
             if (isOn)
             {
                 m_OnSwitchOn?.Invoke();
@@ -199,112 +237,187 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
             {
                 m_OnSwitchOff?.Invoke();
             }
-
-            m_OnSwitchStateChanged?.Invoke(isOn);
         }
 
-        /// <inheritdoc/>
         protected override void OnToggleStateChanged(bool previousState, bool newState)
         {
-            Debug.Log($"[Switch] State changed: {(previousState ? "On" : "Off")} -> {(newState ? "On" : "Off")}", this);
+            Debug.Log($"[{name}] State: {(previousState ? "On" : "Off")} → {(newState ? "On" : "Off")}", this);
+        }
 
-            if (newState)
+        #endregion
+
+        #region Visual & Audio
+
+        private void UpdateVisuals(bool isOn, bool animate)
+        {
+            // Lever animation
+            m_TargetLeverAngle = isOn ? m_LeverRotationAngle : -m_LeverRotationAngle;
+
+            if (!animate)
             {
-                OnSwitchedOn?.Invoke();
+                m_CurrentLeverAngle = m_TargetLeverAngle;
+                ApplyLeverRotation();
             }
-            else
+
+            // Audio feedback
+            if (animate)
             {
-                OnSwitchedOff?.Invoke();
+                var clip = isOn ? m_SwitchOnSound : m_SwitchOffSound;
+                if (clip != null && m_AudioSource != null)
+                {
+                    m_AudioSource.PlayOneShot(clip);
+                }
+            }
+        }
+
+        private void AnimateLever()
+        {
+            if (m_LeverPivot == null || Mathf.Approximately(m_CurrentLeverAngle, m_TargetLeverAngle))
+            {
+                return;
+            }
+
+            m_CurrentLeverAngle = Mathf.MoveTowards(
+                m_CurrentLeverAngle,
+                m_TargetLeverAngle,
+                k_LeverAnimationSpeed * m_LeverRotationAngle * 2f * Time.deltaTime
+            );
+
+            ApplyLeverRotation();
+        }
+
+        private void ApplyLeverRotation()
+        {
+            if (m_LeverPivot != null)
+            {
+                m_LeverPivot.localRotation = Quaternion.Euler(m_CurrentLeverAngle, 0f, 0f);
             }
         }
 
         #endregion
 
-        #region Private Methods
+        #region Target Actions
 
-        private void UpdateLeverAnimation()
+        private void CacheTargetReferences()
         {
-            if (m_LeverPivot == null)
+            m_ToggleableCache.Clear();
+            m_ChestCache.Clear();
+
+            foreach (var target in m_Targets)
             {
-                return;
-            }
-
-            // Smoothly interpolate to target angle
-            if (!Mathf.Approximately(m_CurrentLeverAngle, m_TargetLeverAngle))
-            {
-                m_CurrentLeverAngle = Mathf.MoveTowards(
-                    m_CurrentLeverAngle,
-                    m_TargetLeverAngle,
-                    m_AnimationSpeed * m_LeverAngle * 2f * Time.deltaTime
-                );
-
-                ApplyLeverRotation();
-            }
-        }
-
-        private void ApplyLeverRotation()
-        {
-            if (m_LeverPivot == null)
-            {
-                return;
-            }
-
-            m_LeverPivot.localRotation = Quaternion.Euler(m_CurrentLeverAngle, 0f, 0f);
-        }
-
-        private void TriggerConnectedObjects(bool isOn)
-        {
-            var targetState = m_InvertConnectedState ? !isOn : isOn;
-
-            foreach (var obj in m_ConnectedObjects)
-            {
-                if (obj == null)
-                {
-                    Debug.LogWarning("[Switch] Null connected object found, skipping.", this);
+                if (target.TargetObject == null)
                     continue;
-                }
 
-                var toggleable = obj.GetComponent<IToggleable>();
+                // Cache toggleable reference
+                var toggleable = target.TargetObject.GetComponent<IToggleable>();
                 if (toggleable != null)
                 {
-                    toggleable.SetState(targetState);
-                    continue;
+                    m_ToggleableCache[target.TargetObject] = toggleable;
                 }
 
-                // Fallback: try Door-specific Open/Close for locked doors
-                // (locked doors block IToggleable.SetState, so we use Open/Close)
-                var door = obj.GetComponent<Door>();
-                if (door != null)
+                // Cache chest reference
+                var chest = target.TargetObject.GetComponent<Chest>();
+                if (chest != null)
                 {
-                    if (targetState)
-                    {
-                        door.Open();
-                    }
-                    else
-                    {
-                        door.Close();
-                    }
-                    continue;
+                    m_ChestCache[target.TargetObject] = chest;
                 }
-
-                Debug.LogWarning($"[Switch] Connected object '{obj.name}' has no IToggleable or Door component.", this);
             }
         }
 
-        private void PlaySound(AudioClip clip)
+        private void ExecuteTargetActions(bool switchIsOn)
         {
-            if (clip != null && m_AudioSource != null)
+            foreach (var target in m_Targets)
             {
-                m_AudioSource.PlayOneShot(clip);
+                if (target.TargetObject == null || !target.Enabled)
+                    continue;
+
+                switch (target.ActionType)
+                {
+                    case TargetActionType.Toggle:
+                        ExecuteToggleAction(target, switchIsOn);
+                        break;
+
+                    case TargetActionType.OpenChest:
+                        if (switchIsOn) // Only open on switch activation
+                        {
+                            ExecuteOpenChestAction(target);
+                        }
+                        break;
+                }
             }
         }
 
-        private void GenerateUniqueIdIfEmpty()
+        private void ExecuteToggleAction(ConnectedTarget target, bool switchIsOn)
         {
-            if (string.IsNullOrEmpty(m_UniqueId))
+            // Use cached reference for performance
+            if (m_ToggleableCache.TryGetValue(target.TargetObject, out var toggleable))
             {
-                m_UniqueId = $"Switch_{gameObject.name}_{GetInstanceID()}";
+                toggleable.SetState(switchIsOn);
+                return;
             }
+
+            // Fallback for Door (locked doors block IToggleable.SetState)
+            var door = target.TargetObject.GetComponent<Door>();
+            if (door != null)
+            {
+                if (switchIsOn)
+                    door.Open();
+                else
+                    door.Close();
+            }
+        }
+
+        private void ExecuteOpenChestAction(ConnectedTarget target)
+        {
+            // Use cached reference for performance
+            if (!m_ChestCache.TryGetValue(target.TargetObject, out var chest))
+            {
+                Debug.LogWarning($"[{name}] Target '{target.TargetObject.name}' has no Chest component.", this);
+                return;
+            }
+
+            if (chest.IsOpened)
+            {
+                Debug.Log($"[{name}] Chest '{target.TargetObject.name}' is already open.", this);
+                return;
+            }
+
+            // Start coroutine to simulate player hold
+            StartCoroutine(SimulateChestHold(chest));
+        }
+
+        /// <summary>
+        /// Simulates a player holding to open a chest over time.
+        /// </summary>
+        private IEnumerator SimulateChestHold(Chest chest)
+        {
+            IInteractable interactable = chest;
+            if (interactable == null)
+            {
+                Debug.LogError($"[{name}] Chest does not implement IInteractable!", this);
+                yield break;
+            }
+
+            // Start the hold
+            interactable.OnHoldStart(null);
+
+            // Simulate hold progress over the chest's hold duration
+            var holdDuration = chest.HoldDuration;
+            var elapsed = 0f;
+
+            while (elapsed < holdDuration)
+            {
+                elapsed += Time.deltaTime;
+                var progress = Mathf.Clamp01(elapsed / holdDuration);
+        
+                // Update progress (this animates the lid)
+                interactable.OnHoldProgress(progress);
+        
+                yield return null;
+            }
+
+            // Complete the hold
+            interactable.OnHoldComplete(null);
         }
 
         #endregion
@@ -312,33 +425,59 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         #region Nested Types
 
         /// <summary>
-        /// Types of switch behavior.
+        /// Defines how the switch behaves when interacted with.
         /// </summary>
         public enum SwitchType
         {
             /// <summary>
-            /// Standard toggle - stays in position after interaction.
+            /// Standard toggle switch - stays in position until toggled again.
             /// </summary>
             Toggle,
 
             /// <summary>
-            /// Momentary - returns to off state when released.
+            /// Momentary switch - automatically returns to OFF after a delay.
             /// </summary>
             Momentary,
 
             /// <summary>
-            /// One-shot - can only be activated once.
+            /// One-shot switch - can only be activated once, then becomes disabled.
             /// </summary>
             OneShot
         }
 
         /// <summary>
-        /// Save data structure for switch state.
+        /// Defines what action to perform on a connected target.
+        /// </summary>
+        public enum TargetActionType
+        {
+            /// <summary>
+            /// Toggle the target on/off (for doors, switches, etc).
+            /// </summary>
+            Toggle,
+
+            /// <summary>
+            /// Force open a chest (triggers hold interaction).
+            /// </summary>
+            OpenChest
+        }
+
+        /// <summary>
+        /// Represents a connected object that this switch can trigger.
         /// </summary>
         [Serializable]
-        private struct SwitchSaveData
+        public class ConnectedTarget
         {
-            public bool IsOn;
+            [Tooltip("Enable/disable this target action")]
+            public bool Enabled = true;
+
+            [Tooltip("The GameObject to interact with")]
+            public GameObject TargetObject;
+
+            [Tooltip("What action to perform on the target")]
+            public TargetActionType ActionType = TargetActionType.Toggle;
+
+            [Tooltip("Optional: Custom name for this connection (for organization)")]
+            public string Notes;
         }
 
         #endregion

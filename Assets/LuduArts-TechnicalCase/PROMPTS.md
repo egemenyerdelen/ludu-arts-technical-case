@@ -127,6 +127,40 @@ Door class'ında kritik sorunlar olduğunu, çözümlerini ve diğer classların
 
 ---
 
+## Prompt 4: Switch.cs improvement
+
+**Araç:** [Claude Sonnet 4.5 Extended]
+**Tarih/Saat:** 2026-02-08 17:18
+
+**Prompt:**
+```
+Aaallright then, let's do some magic on Switch.cs!
+
+It should open chest or any objects interact!
+Maybe I can change skybox lightning with that switch! 
+
+I want to hold possibilities in my hand in general.
+
+Let's work!
+
+```
+
+**Alınan Cevap (Özet):**
+```
+Gereğinden fazla gelişmiş ve yaklaşık 800+ satıra sahip bir class verdi.
+```
+
+**Nasıl Kullandım:**
+- [ ] Direkt kullandım
+- [ ] Adapte ettim
+- [x] Reddettim
+
+**Açıklama:**
+> Çalıştığım proje için çok gereksiz bir script olduğunu ve neye ihtiyacım olduğunu anlatarak sonrasında daha 
+> optimize ve ihtiyaçlarımı karşılayan bir class elde ettim.
+
+---
+
 ## Genel Değerlendirme
 
 ### LLM'in En Çok Yardımcı Olduğu Alanlar

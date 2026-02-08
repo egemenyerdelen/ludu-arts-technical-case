@@ -411,6 +411,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 145737420}
   m_CullTransparentMesh: 1
+--- !u!1 &198020994 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3196307564862658241, guid: 04fa458662b9a064bb7fc2cd98285353, type: 3}
+  m_PrefabInstance: {fileID: 8628522029496297730}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &206881532
 GameObject:
   m_ObjectHideFlags: 0
@@ -1843,6 +1848,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1502267730 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 54989704328123342, guid: 692e0362246c8a04aa218cee28540692, type: 3}
+  m_PrefabInstance: {fileID: 571079628550875984}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1588249278
 GameObject:
   m_ObjectHideFlags: 0
@@ -2866,6 +2876,42 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1295330926}
     m_Modifications:
+    - target: {fileID: 1542806906468841482, guid: 1a32d853582c49646be2bb1445015726, type: 3}
+      propertyPath: m_Targets.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1542806906468841482, guid: 1a32d853582c49646be2bb1445015726, type: 3}
+      propertyPath: m_ConnectedObjects.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1542806906468841482, guid: 1a32d853582c49646be2bb1445015726, type: 3}
+      propertyPath: m_Targets.Array.data[0].Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1542806906468841482, guid: 1a32d853582c49646be2bb1445015726, type: 3}
+      propertyPath: m_Targets.Array.data[1].Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1542806906468841482, guid: 1a32d853582c49646be2bb1445015726, type: 3}
+      propertyPath: 'm_ConnectedObjects.Array.data[0]'
+      value: 
+      objectReference: {fileID: 198020994}
+    - target: {fileID: 1542806906468841482, guid: 1a32d853582c49646be2bb1445015726, type: 3}
+      propertyPath: m_Targets.Array.data[0].ActionType
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1542806906468841482, guid: 1a32d853582c49646be2bb1445015726, type: 3}
+      propertyPath: m_Targets.Array.data[1].ActionType
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1542806906468841482, guid: 1a32d853582c49646be2bb1445015726, type: 3}
+      propertyPath: m_Targets.Array.data[0].TargetObject
+      value: 
+      objectReference: {fileID: 1502267730}
+    - target: {fileID: 1542806906468841482, guid: 1a32d853582c49646be2bb1445015726, type: 3}
+      propertyPath: m_Targets.Array.data[1].TargetObject
+      value: 
+      objectReference: {fileID: 198020994}
     - target: {fileID: 6073571126024810633, guid: 1a32d853582c49646be2bb1445015726, type: 3}
       propertyPath: m_Name
       value: Switch
