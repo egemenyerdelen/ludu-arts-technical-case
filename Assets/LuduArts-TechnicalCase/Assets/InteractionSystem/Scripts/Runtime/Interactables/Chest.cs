@@ -75,12 +75,30 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         #region Properties
 
         /// <inheritdoc/>
+        public override InteractionType InteractionType
+        {
+            get
+            {
+                // OPEN chest = Instant (just press E)
+                if (m_IsOpened)
+                    return InteractionType.Instant;
+        
+                // CLOSED chest = Hold (hold E to open)
+                return InteractionType.Hold;
+            }
+        }
+
+        /// <inheritdoc/>
         public string UniqueId => m_UniqueId;
 
         /// <summary>
         /// Gets whether the chest has been opened.
         /// </summary>
-        public bool IsOpened => m_IsOpened;
+        public bool IsOpened
+        {
+            get => m_IsOpened;
+            set => m_IsOpened = value;
+        }
 
         /// <summary>
         /// Gets whether the contents have been collected.
@@ -249,6 +267,9 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         }
 
         /// <inheritdoc/>
+
+
+        /// <inheritdoc/>
         protected override void PerformHoldInteraction(InteractionDetector interactionDetector)
         {
             m_State = ChestState.Open;
@@ -260,24 +281,25 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
             PlaySound(m_OpenedSound);
             PlayOpenVFX();
 
-            if (m_GiveContentsOnOpen)
+            // Only auto-collect if opened by a player (not a switch)
+            if (m_GiveContentsOnOpen && interactionDetector != null)
             {
-                if (interactionDetector != null)
+                var playerInventory = interactionDetector.GetComponent<PlayerKeyInventory>();
+                if (playerInventory != null)
                 {
-                    var playerInventory = interactionDetector.GetComponent<PlayerKeyInventory>();
-                    if (playerInventory != null)
-                    {
-                        CollectContents(playerInventory);
-                    }
-                    else
-                    {
-                        Debug.LogWarning("[Chest] No PlayerKeyInventory found on interactor!", this);
-                    }
+                    CollectContents(playerInventory);
                 }
+                else
+                {
+                    Debug.LogWarning("[Chest] No PlayerKeyInventory found on interactor!", this);
+                }
+            }
+            else if (interactionDetector == null)
+            {
+                Debug.Log("[Chest] Opened by external trigger (switch). Player can interact to collect items.", this);
             }
 
             OnChestOpened?.Invoke();
-            Debug.Log("[Chest] Chest opened!", this);
         }
 
         /// <inheritdoc/>
@@ -296,11 +318,14 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         /// <inheritdoc/>
         protected override void OnInteractInternal(InteractionDetector interactionDetector)
         {
-            // If chest is already open but contents not collected, collect them
+            // Called when InteractionType is Instant
             if (m_IsOpened && !m_ContentsCollected)
             {
-                var playerInventory = interactionDetector.GetComponent<PlayerKeyInventory>();
-                CollectContents(playerInventory);
+                if (interactionDetector != null)
+                {
+                    var playerInventory = interactionDetector.GetComponent<PlayerKeyInventory>();
+                    CollectContents(playerInventory);
+                }
             }
         }
 

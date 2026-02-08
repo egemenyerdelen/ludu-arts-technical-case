@@ -57,7 +57,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
         #region Properties
 
         /// <inheritdoc/>
-        public sealed override InteractionType InteractionType => InteractionType.Hold;
+        public override InteractionType InteractionType => InteractionType.Hold;
 
         /// <inheritdoc/>
         public sealed override float HoldDuration => m_HoldDuration;
@@ -220,7 +220,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
         /// Called each frame during hold with current progress. Override for custom behavior.
         /// </summary>
         /// <param name="progress">Normalized progress from 0 to 1.</param>
-        /// <param name="interactor">Gets InteractionDetector class</param>
         protected virtual void OnHoldUpdate(float progress) { }
 
         /// <summary>

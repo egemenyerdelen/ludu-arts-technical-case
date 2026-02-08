@@ -388,6 +388,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
 
         /// <summary>
         /// Simulates a player holding to open a chest over time.
+        /// Note: This only OPENS the chest - player must interact to collect contents.
         /// </summary>
         private IEnumerator SimulateChestHold(Chest chest)
         {
@@ -409,14 +410,15 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
             {
                 elapsed += Time.deltaTime;
                 var progress = Mathf.Clamp01(elapsed / holdDuration);
-        
+
                 // Update progress (this animates the lid)
                 interactable.OnHoldProgress(progress);
-        
+
                 yield return null;
             }
 
-            // Complete the hold
+            // Complete the hold WITHOUT auto-collecting items
+            // Player will need to interact with open chest to collect
             interactable.OnHoldComplete(null);
         }
 

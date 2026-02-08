@@ -482,7 +482,8 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Player
 
             if (m_CurrentTarget != null && m_CurrentTarget.CanInteract)
             {
-                var keyBinding = GetInteractKeyBinding();
+                //var keyBinding = GetInteractKeyBinding();
+                const string keyBinding = "E";
 
                 m_UIManager.ShowPrompt(
                     m_CurrentTarget.InteractionPrompt,
