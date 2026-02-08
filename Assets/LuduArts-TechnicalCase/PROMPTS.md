@@ -92,37 +92,38 @@ Take your time, I will be waiting for you analysis!
 
 ---
 
-## Prompt 3: ...
+## Prompt 3: Class check-up and bug-fix
 
 **Araç:** [Claude Sonnet 4.5 Extended]
-**Tarih/Saat:** 2026-02-08 00:08
+**Tarih/Saat:** 2026-02-08 13:02
 
 **Prompt:**
 ```
 [4 .cs file uploaded]
 
-I am trying to change some core features about interactable classes.
+Thanks for the last help, It works!
 
-In old system, interactables don't have any idea about who is interactor; but now, they know who is interacting (if the implementation is correct :)) 
+Now, I need more basic thing, I need to handle that door script for making animations or transform manipulations correctly.
 
-I cannot be sure about those classes are correct and system is working perfect. So, maybe u wanna check and show me what could possibly go wrong and what could be improve.
+I tried some ways to rotate door around door hinge but current situation is a little broken, idk... maybe I need some sleep...
 
-Take your time, I will be waiting for you analysis!
+Can u analyze firstly door class, then the other item classes of mine? What are u thinking about them?
 ```
 
 **Alınan Cevap (Özet):**
 ```
-8 maddeden oluşan bir sorun tespiti ve düzeltme önerileri ile cevap verdi.
+Door class'ında kritik sorunlar olduğunu, çözümlerini ve diğer classların analizlerini iletti.
 ```
 
 **Nasıl Kullandım:**
-- [x] Direkt kullandım
-- [ ] Adapte ettim
+- [ ] Direkt kullandım
+- [x] Adapte ettim
 - [ ] Reddettim
 
 **Açıklama:**
-> Anlattığım sorunu oldukça iyi anlamıştı ve Claude'a eklediğim skill sayesinde
-> tek seferde verdiği cevabı minimal düzeltme ile işleme alabildim.
+> Sorunların çözüm yollarını, hataların kaynaklarını iyi bir şekilde gösterdiği için
+> hızlanmama ve temiz ilerlememe oldukça yardımcı oldu. Verdiği çıktıları kendime uyacak şekilde değiştirerek 
+> spesifik sorunları çözdüm.
 
 ---
 

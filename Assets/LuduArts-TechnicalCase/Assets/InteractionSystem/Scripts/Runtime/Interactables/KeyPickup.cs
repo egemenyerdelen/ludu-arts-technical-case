@@ -123,7 +123,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         #region Methods
 
         /// <inheritdoc/>
-        protected override void PerformInstantInteraction()
+        protected override void PerformInstantInteraction(InteractionDetector interactionDetector)
         {
             if (m_IsCollected)
             {

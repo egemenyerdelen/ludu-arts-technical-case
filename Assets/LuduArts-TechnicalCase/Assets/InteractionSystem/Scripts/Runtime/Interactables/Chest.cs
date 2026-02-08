@@ -380,18 +380,6 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
             }
         }
 
-        private PlayerKeyInventory FindPlayerInventory()
-        {
-            var player = GameObject.FindGameObjectWithTag("Player");
-
-            if (player != null)
-            {
-                return player.GetComponent<PlayerKeyInventory>();
-            }
-
-            return FindAnyObjectByType<PlayerKeyInventory>();
-        }
-
         private void PlaySound(AudioClip clip)
         {
             if (clip != null && m_AudioSource != null)

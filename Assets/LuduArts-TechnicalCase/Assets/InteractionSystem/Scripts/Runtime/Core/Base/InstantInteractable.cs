@@ -58,7 +58,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
             }
 
             // Perform the instant interaction
-            PerformInstantInteraction();
+            PerformInstantInteraction(interactionDetector);
 
             // Mark as interacted if configured to disable
             if (m_DisableOnInteract)
@@ -84,7 +84,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Core.B
         /// Override this method to implement the specific instant interaction behavior.
         /// Called when the player interacts with this object.
         /// </summary>
-        protected abstract void PerformInstantInteraction();
+        protected abstract void PerformInstantInteraction(InteractionDetector interactionDetector);
 
         #endregion
 

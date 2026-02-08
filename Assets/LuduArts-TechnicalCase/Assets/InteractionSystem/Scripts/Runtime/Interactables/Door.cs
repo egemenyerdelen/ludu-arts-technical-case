@@ -312,7 +312,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
 
         private void InitializeRotations()
         {
-            m_ClosedRotation = transform.localRotation;
+            m_ClosedRotation = m_PivotPoint.localRotation;
             m_OpenRotation = m_ClosedRotation * Quaternion.Euler(0f, m_OpenAngle, 0f);
         }
 
@@ -353,7 +353,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         {
             m_IsAnimating = true;
             
-            var startRotation = gameObject.transform.localRotation;
+            var startRotation = m_PivotPoint.localRotation;
             var targetRotation = isOn ? m_OpenRotation : m_ClosedRotation;
 
             var elapsed = 0f;
@@ -362,17 +362,8 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
             {
                 elapsed += Time.deltaTime;
                 var t = Mathf.SmoothStep(0f, 1f, elapsed / m_AnimationDuration);
-                transform.localRotation = Quaternion.Slerp(startRotation, targetRotation, t);
+                m_PivotPoint.localRotation = Quaternion.Slerp(startRotation, targetRotation, t);
                 yield return null;
-            }
-
-            if (transform.localRotation != targetRotation)
-            {
-                transform.RotateAround(m_PivotPoint.position, Vector3.up, m_OpenAngle);
-            }
-            else
-            {
-                transform.RotateAround(m_PivotPoint.position, Vector3.up, -m_OpenAngle);
             }
             
             m_IsAnimating = false;
@@ -381,8 +372,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
 
         private void SetRotationImmediate(bool isOn)
         {
-            var pivot = m_PivotPoint != null ? m_PivotPoint : transform;
-            pivot.localRotation = isOn ? m_OpenRotation : m_ClosedRotation;
+            m_PivotPoint.localRotation = isOn ? m_OpenRotation : m_ClosedRotation;
         }
 
         private void UpdateAnimatorLockState()
