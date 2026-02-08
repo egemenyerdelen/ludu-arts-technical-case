@@ -33,7 +33,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4596837791986549004}
-  - {fileID: 7323780030634955480}
   - {fileID: 2876480259938784450}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -152,19 +151,47 @@ MonoBehaviour:
   m_HoldDuration: 2
   m_OneTimeUse: 1
   m_ResetProgressOnCancel: 1
-  m_LidPivot: {fileID: 7323780030634955480}
-  m_OpenAngle: 110
+  m_LidPivot: {fileID: 2876480259938784450}
+  m_OpenAngle: 90
   m_OpenAnimationDuration: 0.5
-  m_Contents: []
+  m_State: 0
+  m_Contents:
+  - m_ContentType: 1
+    m_ItemName: Golden Key
+    m_Quantity: 1
+    m_KeyItem: {fileID: 11400000, guid: c9ca9fcc6f3d38946bf30da1bd10b0d3, type: 2}
+    m_Icon: {fileID: 10915, guid: 0000000000000000f000000000000000, type: 0}
   m_GiveContentsOnOpen: 1
-  m_Animator: {fileID: 0}
-  m_UseAnimator: 0
   m_OpeningSound: {fileID: 0}
   m_OpenedSound: {fileID: 0}
   m_ItemCollectedSound: {fileID: 0}
   m_OpenVFX: {fileID: 0}
   m_GlowLight: {fileID: 0}
   m_GlowIntensity: 2
+  m_GlowCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   m_UniqueId: Chest_P_Chest_-85160
 --- !u!114 &2597723227636964285
 MonoBehaviour:
@@ -207,12 +234,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4548055575207744819}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0.9, z: 0}
   m_LocalScale: {x: 1, y: 0.2, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 2363037384585930905}
+  m_Father: {fileID: 2876480259938784450}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &6005124219795647613
 MeshFilter:
@@ -429,9 +456,10 @@ Transform:
   m_GameObject: {fileID: 6562133288473491655}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.8, z: 0.4}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 7323780030634955480}
   m_Father: {fileID: 2363037384585930905}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

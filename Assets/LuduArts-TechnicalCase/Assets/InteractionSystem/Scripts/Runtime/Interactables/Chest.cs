@@ -17,23 +17,16 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
     {
         #region Fields
 
-        // Private constant fields
-        private const string k_AnimatorOpenParameter = "IsOpen";
-        private const string k_AnimatorProgressParameter = "OpenProgress";
-
         // Serialized private instance fields
         [Header("Chest Settings")]
         [SerializeField] private Transform m_LidPivot;
         [SerializeField] private float m_OpenAngle = -110f;
         [SerializeField] private float m_OpenAnimationDuration = 0.5f;
+        [SerializeField] private ChestState m_State = ChestState.Closed;
 
         [Header("Contents")]
         [SerializeField] private List<ChestContent> m_Contents = new List<ChestContent>();
         [SerializeField] private bool m_GiveContentsOnOpen = true;
-
-        [Header("Animation")]
-        [SerializeField] private Animator m_Animator;
-        [SerializeField] private bool m_UseAnimator = true;
 
         [Header("Audio")]
         [SerializeField] private AudioClip m_OpeningSound;
@@ -44,6 +37,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         [SerializeField] private ParticleSystem m_OpenVFX;
         [SerializeField] private Light m_GlowLight;
         [SerializeField] private float m_GlowIntensity = 2f;
+        [SerializeField] private AnimationCurve m_GlowCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
         [Header("Save System")]
         [SerializeField] private string m_UniqueId;
@@ -55,6 +49,7 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         private bool m_IsOpened;
         private float m_CurrentOpenProgress;
         private bool m_ContentsCollected;
+        private Coroutine m_CloseLidCoroutine;
 
         #endregion
 
@@ -152,6 +147,18 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
                 GenerateUniqueIdIfEmpty();
             }
         }
+        
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+    
+            // Cleanup
+            if (m_CloseLidCoroutine != null)
+            {
+                StopCoroutine(m_CloseLidCoroutine);
+                m_CloseLidCoroutine = null;
+            }
+        }
 
         #endregion
 
@@ -209,6 +216,15 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         /// <inheritdoc/>
         protected override void OnHoldBegin(InteractionDetector interactionDetector)
         {
+            m_State = ChestState.Opening; // Clear state
+            
+            // Stop close animation if player starts holding again
+            if (m_CloseLidCoroutine != null)
+            {
+                StopCoroutine(m_CloseLidCoroutine);
+                m_CloseLidCoroutine = null;
+            }
+    
             PlaySound(m_OpeningSound);
             OnChestOpening?.Invoke();
         }
@@ -216,41 +232,48 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         /// <inheritdoc/>
         protected override void OnHoldUpdate(float progress)
         {
-            m_CurrentOpenProgress = progress;
-
-            SetLidRotation(progress);
-
-            if (m_UseAnimator && m_Animator != null)
+            // Only update if actually opening
+            if (m_State != ChestState.Opening)
             {
-                m_Animator.SetFloat(k_AnimatorProgressParameter, progress);
+                return;
             }
+            
+            m_CurrentOpenProgress = progress;
+            SetLidRotation(progress);
 
             if (m_GlowLight != null)
             {
-                m_GlowLight.intensity = Mathf.Lerp(0f, m_GlowIntensity, progress);
+                var curvedProgress = m_GlowCurve.Evaluate(progress);
+                m_GlowLight.intensity = curvedProgress * m_GlowIntensity;
             }
         }
 
         /// <inheritdoc/>
         protected override void PerformHoldInteraction(InteractionDetector interactionDetector)
         {
+            m_State = ChestState.Open;
             m_IsOpened = true;
             m_CurrentOpenProgress = 1f;
 
             SetLidRotation(1f);
-
-            if (m_UseAnimator && m_Animator != null)
-            {
-                m_Animator.SetBool(k_AnimatorOpenParameter, true);
-            }
 
             PlaySound(m_OpenedSound);
             PlayOpenVFX();
 
             if (m_GiveContentsOnOpen)
             {
-                var playerInventory = interactionDetector.GetComponent<PlayerKeyInventory>();
-                CollectContents(playerInventory);
+                if (interactionDetector != null)
+                {
+                    var playerInventory = interactionDetector.GetComponent<PlayerKeyInventory>();
+                    if (playerInventory != null)
+                    {
+                        CollectContents(playerInventory);
+                    }
+                    else
+                    {
+                        Debug.LogWarning("[Chest] No PlayerKeyInventory found on interactor!", this);
+                    }
+                }
             }
 
             OnChestOpened?.Invoke();
@@ -260,7 +283,14 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         /// <inheritdoc/>
         protected override void OnHoldCancelledInternal()
         {
-            StartCoroutine(AnimateLidClose());
+            m_State = ChestState.Closing;
+    
+            if (m_CloseLidCoroutine != null)
+            {
+                StopCoroutine(m_CloseLidCoroutine);
+            }
+    
+            m_CloseLidCoroutine = StartCoroutine(AnimateLidClose());
         }
 
         /// <inheritdoc/>
@@ -305,22 +335,31 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
             var startProgress = m_CurrentOpenProgress;
             var elapsed = 0f;
             var duration = m_OpenAnimationDuration * startProgress;
-
+        
             while (elapsed < duration)
             {
+                // Check if we should abort (player started holding again)
+                if (m_State != ChestState.Closing)
+                {
+                    yield break;
+                }
+                
                 elapsed += Time.deltaTime;
                 var t = 1f - (elapsed / duration);
                 SetLidRotation(Mathf.Lerp(0f, startProgress, t));
                 yield return null;
             }
-
+        
             SetLidRotation(0f);
             m_CurrentOpenProgress = 0f;
-
+            m_State = ChestState.Closed;
+        
             if (m_GlowLight != null)
             {
                 m_GlowLight.intensity = 0f;
             }
+            
+            m_CloseLidCoroutine = null;
         }
 
         private void SetupGlowLight()
@@ -457,6 +496,17 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         {
             public bool IsOpened;
             public bool ContentsCollected;
+        }
+        
+        /// <summary>
+        /// Chest state enum for better case handling.
+        /// </summary>
+        private enum ChestState
+        {
+            Closed,
+            Opening,    // Hold in progress
+            Open,       // Fully opened
+            Closing     // Cancel animation playing
         }
 
         #endregion
