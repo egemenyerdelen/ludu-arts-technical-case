@@ -15,12 +15,12 @@ namespace LuduArts_TechnicalCase.Assets.InteractionSystem.Scripts.Runtime.Intera
         // Serialized private instance fields
         [Header("Key Information")]
         [SerializeField] private string m_DisplayName = "Key";
-        [SerializeField] private KeyType m_KeyType = KeyType.Gold;
-        [SerializeField] [TextArea(2, 4)] private string m_Description = "A key that opens doors.";
+        [SerializeField] private KeyType m_KeyType;
+        [SerializeField] [TextArea(2, 4)] private string m_Description = "A key.";
 
         [Header("Visuals")]
         [SerializeField] private Sprite m_Icon;
-        [SerializeField] private Color m_KeyColor = Color.yellow;
+        [SerializeField] private Color m_KeyColor;
         [SerializeField] private GameObject m_WorldPrefab;
 
         [Header("Audio")]

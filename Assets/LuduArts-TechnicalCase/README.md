@@ -3,14 +3,15 @@
 
 ## Proje Bilgileri
 
-| Bilgi | Değer |
-|------|------|
+| Bilgi | Değer      |
+|------|------------|
 | Unity Versiyonu | 6000.3.6f1 |
-| Render Pipeline | URP |
-| Case Süresi | 12 saat |
-| Tamamlanma Oranı | ~%60 |
+| Render Pipeline | URP        |
+| Case Süresi | 12 saat    |
+| Tamamlanma Oranı | ~%99       |
 
-> Bu case, verilen süre içerisinde **çekirdek interaction mimarisini doğru ve sürdürülebilir şekilde kurmaya** odaklanılarak geliştirilmiştir.
+> Bu case, verilen süre içerisinde **interaction mimarisini doğru ve sürdürülebilir şekilde kurmaya** 
+> odaklanılarak geliştirilmiştir.
 
 ---
 
@@ -52,10 +53,10 @@ git clone https://github.com/egemenyerdelen/ludu-arts-technical-case.git
 
 #### 3. Switch Test
 - Switch aktif edildiğinde bağlı objeye event gönderilir
-- Event bağlantıları Inspector üzerinden yapılmıştır
+- Event bağlantıları Inspector üzerinden yapılabilir
 
 #### 4. Chest Test
-- Sandığa yaklaşınca hold interaction başlar
+- Sandık etkileşiminde hold interaction başlar
 - Progress bar dolduğunda sandık açılır
 - Tek seferlik açılma mantığı uygulanmıştır
 
@@ -103,12 +104,12 @@ PlayerInteractor
 ### C# Coding Conventions
 
 | Kural | Uygulandı | Not |
-|----|----|----|
+|----|----|---|
 | m_ prefix | ☑ | |
 | s_ prefix | ☑ | |
 | k_ prefix | ☑ | |
 | Region kullanımı | ☑ | |
-| XML documentation | ◼ | Core sınıflarda mevcut |
+| XML documentation | ☑ | |
 | Silent bypass yok | ☑ | |
 | Explicit interface impl. | ◼ | Kısmen |
 
@@ -127,9 +128,9 @@ PlayerInteractor
 ### Prefab Kuralları
 
 | Kural | Uygulandı | Not |
-|----|----|----|
+|----|----|---|
 | Transform reset | ☑ | |
-| Pivot bottom-center | ☑ | Bazı objelerde |
+| Pivot bottom-center | ☑ | |
 | Collider tercihi | ☑ | Box collider |
 | Hierarchy düzeni | ☑ | |
 
@@ -139,7 +140,6 @@ PlayerInteractor
 - Ludu Arts coding & prefab standartlarını **ilk defa uygularken**
 - Interaction system’i tamamlamadan önce mimariyi doğru kurma isteği
 - Süreyi feature tamamlamaya değil, **temel sistemi temiz kurmaya** harcamam
-- Kendi bildiğime yüklenmeyip, AI desteğine sırt dayamam
 
 ---
 
@@ -152,40 +152,39 @@ PlayerInteractor
     - ☑ InteractionDetector
     - ☑ Range kontrolü
 
-- ◼ Interaction Types
+- ☑ Interaction Types
     - ☑ Instant
     - ☑ Hold
-    - ◼ Toggle (kısmi)
+    - ☑ Toggle
 
-- ◼ Interactable Objects
+- ☑ Interactable Objects
     - ☑ Door
     - ☑ Key Pickup
     - ☑ Switch
-    - ◼ Chest (core logic tamam)
+    - ☑ Chest
 
-- ◼ UI Feedback
+- ☑ UI Feedback
     - ☑ Prompt
     - ☑ Dynamic text
     - ☑ Hold progress
-    - ◼ Fail feedback (kısmi)
+    - ☑ Fail feedback
 
-- ◼ Simple Inventory
-    - ◼ Key toplama
-    - ◼ UI listesi (temel)
+- ☑ Simple Inventory
+    - ☑ Key toplama
+    - ☑ UI listesi
 
 ---
 
 ## Bilinen Limitasyonlar
 
 ### Tamamlanamayan Özellikler
-1. Pek çok özellik tamamlanamadı.
+1. -
 
 ### Bilinen Bug’lar
-1. Her kapı için elimizde bir anahtar var, kapıyı ikinci kez kitledikten sonra açamıyoruz.
+1. UI tarafında inventory slotlarının gösterimi.
 
 ### İyileştirme Önerileri
 1. InteractionDefinition yapısının ScriptableObject olarak ayrılması
-2. Interaction highlight eklenmesi
 
 ---
 
