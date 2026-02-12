@@ -7746,6 +7746,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 1295330926}
     m_Modifications:
     - target: {fileID: 890128439151220789, guid: 04fa458662b9a064bb7fc2cd98285353, type: 3}
+      propertyPath: m_IsLocked
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 890128439151220789, guid: 04fa458662b9a064bb7fc2cd98285353, type: 3}
       propertyPath: m_RequiredKeyType
       value: 2
       objectReference: {fileID: 0}
